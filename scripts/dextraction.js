@@ -505,12 +505,13 @@ Dextraction.prototype.mergedata = function(){
                 var record = this.getFarmerRecordPlot(farmerId, new_name.plot);
                 if(this.getObjectLength(record) > 0){
                     // Replace the gps coordinates with new values
+                    // Split the Lon and Lat
                     //var gpsupdate = this.getUpdatedGPS(new_name.name);
                     for(var id in record){
-                        for(var key in record[id]){
-                            if(key !== '_01note')
-                                record[id]['_06loc'] = this.data_gps[i].Lat + ', ' + this.data_gps[i].Lon;
-                        }
+                        record[id]['_06loc'] = '';
+                        record[id]['_lon'] = this.data_gps[i].Lon;
+                        record[id]['_lat'] = this.data_gps[i].Lat;
+                        delete record[id]['_06loc'];
                     }
 
                     // Encode the keys
