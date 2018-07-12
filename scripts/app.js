@@ -49,7 +49,8 @@ var loadFarmerInfoData = function(){
 /**
  * Load data sets
  */
-exports.loadData = function(){
-    dextraction.init();    // Create a new dextraction class 
+exports.start = function(){
+    // dextraction.init();    // Create a new dextraction class 
+    dextraction.loadData();
 };
 

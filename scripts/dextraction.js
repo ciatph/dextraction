@@ -14,8 +14,6 @@ var Dextraction = function(){
 
     // array of firebase keys for a farmer record
     this.record_keys = [];
-
-    this.loadData();
 };
 
 
@@ -38,7 +36,7 @@ Dextraction.prototype.getObjectLength = function(obj){
 Dextraction.prototype.cleanField = function(str){
     str = str.toString();
     try{
-        //str = str.replace(/\t/g, ' ');
+        str = str.replace(/\t/g, '');
         str = str.replace(/\n/g, '');
     }
     catch(e){
@@ -463,6 +461,18 @@ Dextraction.prototype.nameExists = function(searchname){
 
 
 /**
+ * Gets the cell ID for a given gps coordinate
+ * @param {A JS object containing GPS coordinates. Format: {Lat:"",Lon:""}} coords 
+ */
+Dextraction.prototype.getCellId = function(coords){
+    var row = (90 - coords.Lat) / 0.25;
+    var col = (coords.Lat + 180) / 0.25;
+    var cell = (row - 1) * 1440 + col;
+    return cell;
+};
+
+
+/**
  * Merge the new ISU-edited GPS data to existing data matched by farmer names
  * 
  */
@@ -536,7 +546,6 @@ Dextraction.prototype.mergedata = function(){
             console.log('data was saved!');
         }
     });
-    //return newcsv;
 };
 
 
@@ -545,6 +554,4 @@ Dextraction.prototype.hello = function(){
 };
 
 
-exports.init = function(){
-    return new Dextraction();
-};
+module.exports = new Dextraction();
