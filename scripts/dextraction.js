@@ -465,10 +465,15 @@ Dextraction.prototype.nameExists = function(searchname){
  * @param {A JS object containing GPS coordinates. Format: {Lat:"",Lon:""}} coords 
  */
 Dextraction.prototype.getCellId = function(coords){
-    var row = (90 - coords.Lat) / 0.25;
-    var col = (coords.Lat + 180) / 0.25;
+    var row = 1 + Math.floor((90 - parseFloat(coords.Lat)) / 0.25);
+    var col = 1 + Math.floor((parseFloat(coords.Lon) + 180) / 0.25);
     var cell = (row - 1) * 1440 + col;
-    return cell;
+
+    return {
+        row: row,
+        col: col,
+        cell: cell
+    };
 };
 
 
@@ -483,7 +488,9 @@ Dextraction.prototype.mergedata = function(){
     var missed = [];
 
     var newdata = [];
+    var unique_cellid = [];
     var newcsv = '[';
+    var count_gps_all = 0;
     
     // Count how many new names matched in the existing data
     for(var i=0; i<this.data_gps.length; i++){
@@ -505,21 +512,34 @@ Dextraction.prototype.mergedata = function(){
                 var record = this.getFarmerRecordPlot(farmerId, new_name.plot);
                 if(this.getObjectLength(record) > 0){
                     // Replace the gps coordinates with new values
-                    // Split the Lon and Lat
                     //var gpsupdate = this.getUpdatedGPS(new_name.name);
                     for(var id in record){
+                        count_gps_all++;
+                        // Split the Lon and Lat
                         record[id]['_06loc'] = '';
                         record[id]['_lon'] = this.data_gps[i].Lon;
                         record[id]['_lat'] = this.data_gps[i].Lat;
                         delete record[id]['_06loc'];
+
+                        // Find the cell ID
+                        var wh = this.getCellId({Lon:this.data_gps[i].Lon, Lat:this.data_gps[i].Lat});
+                        record[id]['row'] = wh.row;
+                        record[id]['col'] = wh.col;
+                        record[id]['cell_id'] = wh.cell;
+
+                        if(unique_cellid.indexOf(wh.cell) === -1){
+                            unique_cellid.push(wh.cell);
+                            console.log('cell: ' + wh.cell);
+                        }
                     }
 
                     // Encode the keys
+                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year'];
                     for(var id in record){
                         newcsv += '{';
                         for(var fbkey in record[id]){
-                            //newcsv += fbkey + ':"' + record[id][fbkey] + '",';
-                            newcsv += '"' + fbkey + '":"' + this.cleanField(record[id][fbkey]) + '",';
+                            if(encode_array.indexOf(fbkey) >= 0)
+                                newcsv += '"' + fbkey + '":"' + this.cleanField(record[id][fbkey]) + '",';
                         }
                         newcsv = newcsv.substring(0, newcsv.length-1) + '},';
                     }
@@ -536,7 +556,7 @@ Dextraction.prototype.mergedata = function(){
         }
     }
 
-    console.log('matched: ' + count_match + '\nmissed: ' + count_missed);
+    console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all);
 
     newcsv = newcsv.substring(0, newcsv.length-1) + ']';
     fs.writeFile('./data/extracted.json', newcsv, function(err){
