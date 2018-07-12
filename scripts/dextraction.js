@@ -574,6 +574,22 @@ Dextraction.prototype.getdaysinmonth = function(date){
 
 
 /**
+ * Get the number of months between (2) dates
+ * @param {*} date1 
+ * @param {*} date2 
+ */
+Dextraction.prototype.getmonthdiff = function(date1, date2){
+    date1 = new Date(date1);
+    date2 = new Date(date2);
+
+    var months = (date2.getFullYear() - date1.getFullYear()) * 12;
+    months -= date1.getMonth() + 1;
+    months += date2.getMonth();
+    return months <= 0 ? 0 : months;
+};
+
+
+/**
  * Merge the new ISU-edited GPS data to existing data matched by farmer names
  * 
  */
@@ -639,11 +655,19 @@ Dextraction.prototype.mergedata = function(){
 
                             // Load all the unique weather files once
                             this.ref_weather[cell] = {};           
-                        }                        
+                        }        
+                        
+                        // Match MAP
+                        /*
+                        if(record[id]['_01hvdate'] !== ''){
+                            record[id]['_check_map'] = record[id]['_01hvdate'] + " =MAP " + this.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
+                        }
+                        */
+                        record[id]['_map'] = this.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
                     }
 
                     // Encode the keys
-                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv'];
+                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
                     var objtemp = {};
                     for(var id in record){
                         newcsv += '{';
