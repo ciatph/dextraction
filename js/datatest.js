@@ -12,6 +12,16 @@ var DataTest = function(lonid, latid, rowid, colid, cellid, btnid){
 };
 
 
+/**
+ * Checks if a year is aleap year or not
+ * @param {*Year} year 
+ * Returns TRUE|FALSE
+ */
+DataTest.prototype.isLeapYear = function(year){
+    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+}
+
+
 DataTest.prototype.init = function(lonid, latid, rowid, col, cellid, btnid){
     this.lon = document.getElementById(lonid);
     this.lat = document.getElementById(latid);
