@@ -667,13 +667,15 @@ Dextraction.prototype.mergedata = function(){
                     }
 
                     // Encode the keys
-                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
+                    //var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
+                    var exclude_keys = ['_06loc', '_01hvdate'];
                     var objtemp = {};
                     for(var id in record){
                         newcsv += '{';
                         objtemp[id] = {};
                         for(var fbkey in record[id]){
-                            if(encode_array.indexOf(fbkey) >= 0){
+                            if(exclude_keys.indexOf(fbkey) === -1){
+                            //if(encode_array.indexOf(fbkey) >= 0){
                                 newcsv += '"' + fbkey + '":"' + this.cleanField(record[id][fbkey]) + '",';
                                 objtemp[id][fbkey] = this.cleanField(record[id][fbkey]);
                             }
@@ -694,20 +696,6 @@ Dextraction.prototype.mergedata = function(){
 
     // Read associated weather files
     this.readWeatherFiles();
-
-    // Write extracted data to json
-    /*
-    newcsv = newcsv.substring(0, newcsv.length-1) + ']';
-    fs.writeFile('./data/extracted.json', newcsv, function(err){
-        if(err){
-            console.log('error in writing data');
-        }
-        else{
-            console.log('data was saved! ' + self.ref_weather);
-        }
-    });
-    */
-
     console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all + '\nall-data count: ' +Object.keys(this.data_processed).length);    
 };
 
@@ -717,6 +705,7 @@ Dextraction.prototype.appendWeatherData = function(){
     var denom = 0;
 
     // Append weather variables into each record
+    
     for(var i=0; i<this.data_processed.length; i++){
         var record = this.data_processed[i];
 
@@ -740,7 +729,7 @@ Dextraction.prototype.appendWeatherData = function(){
         var max_p_zero = 0;
         
         denom = 0;
-
+        
         for(var j=doy; j<(doy+days)-1; j++){
             // Append Tempetature Max
             var cell = this.data_processed[i].cell_id;
@@ -795,13 +784,13 @@ Dextraction.prototype.appendWeatherData = function(){
         this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
         this.data_processed[i]['w_solar'] = sr;
     }
-
+    
     // Write to csv-json
     for(var i=0; i<this.data_processed.length; i++){
         var record = this.data_processed[i];
         csv += '{';
         for(var key in this.data_processed[i]){
-            csv += '"' + key + ':"' + this.data_processed[i][key] + '",'
+            csv += '"' + key + '":"' + this.data_processed[i][key] + '",'
         }
         csv = csv.substring(0, csv.length-1);
         csv += '},';
