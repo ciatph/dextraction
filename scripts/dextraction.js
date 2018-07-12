@@ -1,6 +1,8 @@
 // External HTTP requests
 const request = require('request');
 var fs = require('fs');
+var readline = require('readline');
+var out = new (require('stream'))();
 
 var Dextraction = function(){
     // farmland plots data with farmer information
@@ -11,6 +13,11 @@ var Dextraction = function(){
 
     // new gps updates from isu
     this.data_gps;
+
+    // final data to be analyzed with weather data
+    this.data_processed = [];
+
+    this.ref_weather = {};
 
     // array of firebase keys for a farmer record
     this.record_keys = [];
@@ -95,26 +102,8 @@ Dextraction.prototype.getAllFarmers = function(){
 };
 
 
-/**
- * Load data sets
- * - online firebase data
- * - local ISU-modified gps points
- */
-Dextraction.prototype.loadData = function(){
+Dextraction.prototype.loadFarmland = function(){
     var self = this;
-    
-    // Online firebase url of all farmer information
-    var url = 'https://us-central1-appdatacollect-3b7d7.cloudfunctions.net/getdata?node=farmer_info';
-    request(url, function(error, response, body){
-        if(!error && response.statusCode == 200){
-            self.data_farmerinfo = JSON.parse(body).data;
-            console.log('loaded farmer information!');
-        }
-        else{
-            console.log('error loading farmer information');
-        }
-    });
-
     // Online firebase url of all farmland data
     var url = 'https://us-central1-appdatacollect-3b7d7.cloudfunctions.net/getdata?node=farmland_setup';
    request(url, function(error, response, body){
@@ -146,9 +135,35 @@ Dextraction.prototype.loadData = function(){
             self.mergedata();
         }
         else{
-            console.log('error loading data!!!');
+            console.log('error loading farmland data!!!');
         }
     });
+};
+
+
+/**
+ * Load data sets
+ * - online firebase data
+ * - local ISU-modified gps points
+ */
+Dextraction.prototype.loadData = function(){
+    var self = this;
+    
+    // Online firebase url of all farmer information
+    var url = 'https://us-central1-appdatacollect-3b7d7.cloudfunctions.net/getdata?node=farmer_info';
+    request(url, function(error, response, body){
+        if(!error && response.statusCode == 200){
+            self.data_farmerinfo = JSON.parse(body).data;
+            console.log('loaded farmer information!');
+
+            // Load the farmland data
+            self.loadFarmland();
+        }
+        else{
+            console.log('error loading farmer information');
+        }
+    });
+
 
     // Load ISU-updated data
     var localUrl = 'data/gps.json';
@@ -181,9 +196,9 @@ Dextraction.prototype.getmonth = function(date, delim, param){
   
     var parts = date.split(delim);
     switch(param){
-        case "year": return parts[0]; break;
-        case "month": return parts[1]; break;
-        case "day": return parts[2]; break;
+        case "year": return parseInt(parts[0]); break;
+        case "month": return parseInt(parts[1]); break;
+        case "day": return parseInt(parts[2]); break;
         default: return -1; break;
     }
 };
@@ -477,6 +492,87 @@ Dextraction.prototype.getCellId = function(coords){
 };
 
 
+
+/**
+ * Checks if a year is aleap year or not
+ * @param {*Year} year 
+ * Returns TRUE|FALSE
+ */
+Dextraction.prototype.isLeapYear = function(year){
+    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+};
+
+
+
+/**
+ * Get the numerical starting index of a month in a year
+ * @param month numerical 1-12 month
+ * Returns 1-365
+ */
+Dextraction.prototype.getdoy = function(date){
+    var datesplit = date.split('-');
+
+    var months = {
+        1:"31",
+        2:"28",
+        3:"31",
+        4:"30",
+        5:"31",
+        6:"30",
+        7:"31",
+        8:"31",
+        9:"30",
+        10:"31",
+        11:"30",
+        12:"31"
+    };
+
+    // Check if leap year
+    months[2] = this.isLeapYear(datesplit[0]) ? 29 : 28;
+
+    var sum = 0;
+    date = date.split('-');
+
+    for(mo in months){
+        if(mo < parseInt(date[1])){
+            sum += parseInt(months[mo]);
+      }
+      else{
+            break;
+        }
+    }
+    return sum + 1;
+};
+
+
+/**
+ * Returns the number of days in a month considering the leap years
+ * @param date  date
+ */
+Dextraction.prototype.getdaysinmonth = function(date){
+    var datesplit = date.split('-');
+
+    var months = {
+        1:"31",
+        2:"28",
+        3:"31",
+        4:"30",
+        5:"31",
+        6:"30",
+        7:"31",
+        8:"31",
+        9:"30",
+        10:"31",
+        11:"30",
+        12:"31"
+    };
+
+    // Check if leap year
+    months[2] = this.isLeapYear(datesplit[0]) ? 29 : 28;
+    return parseInt(months[datesplit[1]]);
+};
+
+
 /**
  * Merge the new ISU-edited GPS data to existing data matched by farmer names
  * 
@@ -488,9 +584,12 @@ Dextraction.prototype.mergedata = function(){
     var missed = [];
 
     var newdata = [];
+    var wh = [];
     var unique_cellid = [];
     var newcsv = '[';
     var count_gps_all = 0;
+
+    var self = this;
     
     // Count how many new names matched in the existing data
     for(var i=0; i<this.data_gps.length; i++){
@@ -521,32 +620,45 @@ Dextraction.prototype.mergedata = function(){
                         record[id]['_lat'] = this.data_gps[i].Lat;
                         delete record[id]['_06loc'];
 
+                        // Find the year of harvest
+                        if(record[id]['_08hvdate'] !== ''){
+                            var yoh = this.getmonth(record[id]['_08hvdate'],'-','year');
+                            record[id]['_year_hv'] = yoh.toString().substring(1, yoh.length);
+                        }
+
                         // Find the cell ID
                         var wh = this.getCellId({Lon:this.data_gps[i].Lon, Lat:this.data_gps[i].Lat});
                         record[id]['row'] = wh.row;
                         record[id]['col'] = wh.col;
-                        record[id]['cell_id'] = wh.cell;
+                        var cell = 'nsch' + wh.cell + '.' + record[id]['_year_hv'];  
+                        record[id]['cell_id'] = cell;
 
-                        if(unique_cellid.indexOf(wh.cell) === -1){
-                            unique_cellid.push(wh.cell);
-                            console.log('cell: ' + wh.cell);
-                        }
+                        if(unique_cellid.indexOf(cell) === -1 && record[id]['_year_hv'] !== undefined){
+                            unique_cellid.push(cell);
+                            console.log('cell: ' + cell);
+
+                            // Load all the unique weather files once
+                            this.ref_weather[cell] = {};           
+                        }                        
                     }
 
                     // Encode the keys
-                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year'];
+                    var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv'];
+                    var objtemp = {};
                     for(var id in record){
                         newcsv += '{';
+                        objtemp[id] = {};
                         for(var fbkey in record[id]){
-                            if(encode_array.indexOf(fbkey) >= 0)
+                            if(encode_array.indexOf(fbkey) >= 0){
                                 newcsv += '"' + fbkey + '":"' + this.cleanField(record[id][fbkey]) + '",';
+                                objtemp[id][fbkey] = this.cleanField(record[id][fbkey]);
+                            }
                         }
                         newcsv = newcsv.substring(0, newcsv.length-1) + '},';
+                        this.data_processed.push(objtemp[id]);
                     }
                 }
-            }
-            // Create a new record from the old record as default and change its GPS
-            
+            }            
         }
         else{
             // New farmer name did not match in any of the existing names
@@ -556,10 +668,123 @@ Dextraction.prototype.mergedata = function(){
         }
     }
 
-    console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all);
+    // Read associated weather files
+    this.readWeatherFiles();
 
+    // Write extracted data to json
+    /*
     newcsv = newcsv.substring(0, newcsv.length-1) + ']';
     fs.writeFile('./data/extracted.json', newcsv, function(err){
+        if(err){
+            console.log('error in writing data');
+        }
+        else{
+            console.log('data was saved! ' + self.ref_weather);
+        }
+    });
+    */
+
+    console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all + '\nall-data count: ' +Object.keys(this.data_processed).length);    
+};
+
+
+Dextraction.prototype.appendWeatherData = function(){
+    var csv = '[';
+    var denom = 0;
+
+    // Append weather variables into each record
+    for(var i=0; i<this.data_processed.length; i++){
+        var record = this.data_processed[i];
+
+        // Get the doy
+        var doy = this.getdoy(record._08hvdate);
+        var month = this.getmonth(this.data_processed[i]._08hvdate,'-','month');
+        var days = this.getdaysinmonth(record._08hvdate);
+
+        // Weather variables
+        var tmax = 0;
+        var tmin = 1000;
+        var tavg = 0;
+        var ftmax31 = 0;
+        var paccum = 0;
+        var vp = 0;
+        var sr = 0;
+
+        var total_tmin = 0;
+        var total_tmax = 0;
+        var zero = 0;
+        var max_p_zero = 0;
+        
+        denom = 0;
+
+        for(var j=doy; j<(doy+days)-1; j++){
+            // Append Tempetature Max
+            var cell = this.data_processed[i].cell_id;
+            denom++;
+
+            if(Object.keys(this.ref_weather[cell]).length > 0){
+                // Temperature max
+                if(this.ref_weather[cell][j].tmax > tmax)
+                    tmax = parseFloat(this.ref_weather[cell][j].tmax);
+
+                // Temperature min
+                if(this.ref_weather[cell][j].tmin < tmin)
+                    tmin = parseFloat(this.ref_weather[cell][j].tmin);  
+
+                // Average temperatures
+                total_tmax += parseFloat(this.ref_weather[cell][j].tmax);
+                total_tmin += parseFloat(this.ref_weather[cell][j].tmin);
+
+                // Frequency of days with Tmax >= 31 degrees Celsius
+                if(this.ref_weather[cell][j].tmax >= 31)
+                    ftmax31++;
+
+                // Precipitation accumulated
+                paccum += parseFloat(this.ref_weather[cell][j].p);    
+
+                // Vapor Pressure
+                vp += parseFloat(this.ref_weather[cell][j].vp);
+
+                // Solar radiattion
+                sr += parseFloat(this.ref_weather[cell][j].sr);
+                
+                // Precipitation Dry Day; max from the number of consecutive dry days (P=0)
+                if(parseInt(this.ref_weather[cell][j].p) === 0){
+                    zero++;
+                }
+                else{
+                    if(zero !== 0){
+                        if(zero > max_p_zero)
+                            max_p_zero = zero;
+                        zero = 0;
+                    }
+                }
+            }              
+        }
+
+        this.data_processed[i]['w_tmax'] = parseFloat(tmax);
+        this.data_processed[i]['w_tmmin'] = parseFloat(tmin);
+        this.data_processed[i]['w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
+        this.data_processed[i]['w_drange'] = (total_tmax/denom) / (total_tmin/denom);
+        this.data_processed[i]['w_ftmax31'] = ftmax31;
+        this.data_processed[i]['w_pdryday'] = max_p_zero;
+        this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
+        this.data_processed[i]['w_solar'] = sr;
+    }
+
+    // Write to csv-json
+    for(var i=0; i<this.data_processed.length; i++){
+        var record = this.data_processed[i];
+        csv += '{';
+        for(var key in this.data_processed[i]){
+            csv += '"' + key + ':"' + this.data_processed[i][key] + '",'
+        }
+        csv = csv.substring(0, csv.length-1);
+        csv += '},';
+    }
+
+    csv = csv.substring(0, csv.length-1) + ']';
+    fs.writeFile('./data/extracted.json', csv, function(err){
         if(err){
             console.log('error in writing data');
         }
@@ -570,8 +795,67 @@ Dextraction.prototype.mergedata = function(){
 };
 
 
-Dextraction.prototype.hello = function(){
-    console.log('hi!');
+/**
+ * Reads  the weather files into JSON format into ref_weather
+ */
+Dextraction.prototype.readWeatherFiles = function(){
+    var dirname = 'data/weather';
+    var self = this;
+    var count = 0;
+
+    var wh = [];
+    for(var key in this.ref_weather)
+        wh.push(key);
+
+    var headers = ['cellid','year','doy','sr','tmin','tmax','vp','ws','p'];
+
+    fs.readdir(dirname, function(err, filenames){
+        if(err){
+            console.log('error reading directory');
+            return;
+        }
+
+        filenames.forEach(function(filename){
+            if(wh.indexOf(filename) >= 0){
+                if(wh.indexOf(filename) >= 0){
+                    var instream = fs.createReadStream(dirname + '/' + filename);
+                    var rl = readline.createInterface(instream, out);
+                    var firstline = true;
+
+                    // Initialize the file record
+                    self.ref_weather[filename] = {};
+                    var day = 1;
+                    var max = self.isLeapYear('2' + filename.split('.')[1]) ? 366 : 365;
+
+                    rl.on('line', function(line){
+                        // Initialize the day
+                        self.ref_weather[filename][day] = {};
+
+                        if(firstline){
+                            console.log('accessing file ' + filename + ', day: ' + day + '\nleap year: ' + max);
+                            count++;
+                        }
+                            
+                        if(!firstline){
+                            var data = line.split(',');
+                            var i = 0;
+
+                            data.forEach(function(value){
+                                self.ref_weather[filename][day][headers[i]] = value;
+                                i++;
+                            });
+                            day++;
+                        }
+                        
+                        firstline = false;
+                        if(count === wh.length - 1 && day >= max){
+                            self.appendWeatherData();   
+                        }
+                    });
+                }
+            }
+        });
+    });
 };
 
 
