@@ -606,6 +606,13 @@ Dextraction.prototype.mergedata = function(){
     var count_gps_all = 0;
 
     var self = this;
+    var dmg = {
+        "0% - 20%": "1",
+        "20% - 40%": "2",
+        "40% - 60%": "3",
+        "60% - 80%": "4",
+        "80% - 100%": "5"                                
+    };
     
     // Count how many new names matched in the existing data
     for(var i=0; i<this.data_gps.length; i++){
@@ -658,12 +665,23 @@ Dextraction.prototype.mergedata = function(){
                         }        
                         
                         // Match MAP
-                        /*
-                        if(record[id]['_01hvdate'] !== ''){
-                            record[id]['_check_map'] = record[id]['_01hvdate'] + " =MAP " + this.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
-                        }
-                        */
                         record[id]['_map'] = this.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
+
+                        // Convert _15deg pest damage to integer
+                        record[id]['_15deg_num'] = (record[id]['_15deg'] !== '') ? dmg[record[id]['_15deg']] : 0;
+
+                        // Separate area
+                        if(record[id]['_06area'] !== ''){
+                            var sep = [',',';','-'];
+                            sep.forEach(function(delim){
+                                if(record[id]['_06area'].indexOf(delim) >= 0){
+                                    var areas = record[id]['_06area'].split(delim);
+                                    record[id]['_06area'] = areas[parseInt(record[id]['_plotno'])-1];//.replace(/[^0-9\.]/g, '');
+
+                                }
+                            });
+                        }
+
                     }
 
                     // Encode the keys
