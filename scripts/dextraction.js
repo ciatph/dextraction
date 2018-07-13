@@ -422,10 +422,21 @@ Dextraction.prototype.mergedata = function(){
                                 if(record[id]['_06area'].indexOf(delim) >= 0){
                                     var areas = record[id]['_06area'].split(delim);
                                     record[id]['_06area'] = areas[parseInt(record[id]['_plotno'])-1];//.replace(/[^0-9\.]/g, '');
-
                                 }
                             });
                         }
+
+                        // Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
+                        // And delete BASAL_QTY. Ignore any values in BASAL_QTY
+                        if(record[id]['BASAL_TYPE'] === 'Others' || record[id]['BASAL_TYPE'] === '')
+                            record[id]['BASAL_TYPE'] = record[id]['BASAL_QTY'];
+
+                            if(record[id]['SIDE_TYPE'] === 'Others' || record[id]['SIDE_TYPE'] === '')
+                            record[id]['SIDE_TYPE'] = record[id]['SIDE_QTY'];
+                            
+                            if(record[id]['TOP_TYPE'] === 'Others' || record[id]['TOP_TYPE'] === '')
+                            record[id]['TOP_TYPE'] = record[id]['TOP_QTY'];         
+
 
                         // Separate the combined _09pdist_prow and convert to centimeters
                         if(record[id]['_09pdist_prow'] !== ''){
@@ -470,7 +481,7 @@ Dextraction.prototype.mergedata = function(){
                     // Encode the keys
                     //var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
                     // Exclude the ff. original fields from the output
-                    var exclude_keys = ['_06loc', '_01hvdate'];
+                    var exclude_keys = ['_06loc', '_01hvdate','BASAL_QTY','SIDE_QTY','TOP_QTY','_12areapl'];
                     var objtemp = {};
                     for(var id in record){
                         // Exclude rows without _07pdate or _08hvdate
