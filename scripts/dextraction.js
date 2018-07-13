@@ -209,90 +209,6 @@ Dextraction.prototype.countdata = function(includeGps){
 
 
 /**
- * Extracts unique subplots information to be used as parameters for extracting weather data
- * - farmerID
- * - GPS 
- * - Planting Date
- * - Harvest Date
- * - Percentage of pest & disease occurrence (0-100%)
- * - Months After Planting (MAP)
- * - Year of Harvest Date
- *  Returns JSON file
- */
-Dextraction.prototype.getweatherparams = function(){
-    const year_list = ['2014','2015'];
-    const getkeys = ['_06loc','_07pdate','_08hvdate'];
-    const node = 'farmland_setup';
-    var data = {};
-    var data_str = '[';
-
-    for(var year in this.data){
-        // Process only the 2014 and 2015 nodes
-        if(year_list.indexOf(year) >= 0){
-          // User-level
-          for(var user in this.data[year][node]){
-            // Farmer-level
-            for(var farmer in this.data[year][node][user]){
-              // Plot-level
-              for(var plot in this.data[year][node][user][farmer]){
-                // Get all plots data with GPS 
-                var gps = this.data[year][node][user][farmer][plot]['_06loc'];
-  
-                if(gps !== ''){
-                  data[plot] = {};
-                  data_str += '{plotid:"' + plot + '",';
-  
-                  // Plot-data
-                  for(var key in this.data[year][node][user][farmer][plot]){
-                    if(getkeys.indexOf(key) >= 0){
-                        if(key !== '_06loc'){
-                            data[plot][key] = this.data[year][node][user][farmer][plot][key];
-                            data_str += key + ':"' + data[plot][key] + '",';
-                        }
-  
-                        // Dates
-                        if(key === '_08hvdate'){
-                            var hvmonth = utils.getmonth(data[plot][key], '-', 'month');
-                            var hvyear = utils.getmonth(data[plot][key], '-', 'year');
-                            data[plot]['hvmonth'] = hvmonth;
-                            data[plot]['hvyear'] = hvyear;
-                            data_str += 'hvmonth:"' + hvmonth + '",';
-                            data_str += 'hvyear:"' + hvyear + '",';
-                        }
-
-                        if(key === '_06loc'){
-                            var lonlat = gps.split(',');
-                            for(var i=0; i<lonlat.length; i++){
-                                lonlat[i] = lonlat[i].replace(/ /g, '');
-                                lonlat[i].trim();
-                            }
-                            data[plot]['lon'] = lonlat[0];
-                            data[plot]['lat'] = lonlat[1];
-                            data_str += 'lon:"' + lonlat[0] + '",';
-                            data_str += 'lat:"' + lonlat[1] + '",';                          
-                        }
-                    }
-                  }
-                  data_str = data_str.substring(0, data_str.length-1);
-                  data_str += '},';
-                }
-              }
-            }
-          }
-        }
-      }
-  
-      data_str = data_str.substring(0, data_str.length-1);
-      data_str += ']';    
-
-    return ({
-        data: data,
-        string: data_str
-      });
-};
-
-
-/**
  * Get the entire farmer record using farmer's first and last names from cached online data
  * @param {*} name 
  */
@@ -443,13 +359,16 @@ Dextraction.prototype.mergedata = function(){
             var farmerId = this.nameExists(new_name.name);
             
             if(farmerId !== null){
+                // Farmer plot(s)
                 var record = this.getFarmerRecordPlot(farmerId, new_name.plot);
+
                 if(utils.getObjectLength(record) > 0){
                     // Replace the gps coordinates with new values
                     //var gpsupdate = this.getUpdatedGPS(new_name.name);
                     for(var id in record){
                         count_gps_all++;
-                        // Split the Lon and Lat
+                        
+                        // Split the Lon and Lat and update with ISU's new GPS points
                         record[id]['_06loc'] = '';
                         record[id]['_lon'] = this.data_gps[i].Lon;
                         record[id]['_lat'] = this.data_gps[i].Lat;
@@ -482,7 +401,37 @@ Dextraction.prototype.mergedata = function(){
                         // Convert _15deg pest damage to integer
                         record[id]['_15deg_num'] = (record[id]['_15deg'] !== '') ? dmg[record[id]['_15deg']] : 0;
 
-                        // Separate area
+                        // Remove misplaced dates on _04rootspl
+                        if(record[id]['_04rootspl'] !== ''){
+                            // replace all letters
+                            var chars = record[id]['_04rootspl'].match(/[A-z]/g);
+                            if(chars !== null){
+                                console.log('--replacing:' + record[id]['_04rootspl']);
+                                record[id]['_04rootspl'] = '';
+                            }
+                            else{
+                                console.log('--retaining ' +record[id]['_04rootspl']);
+                            }
+
+                            // replace dashes
+                            if(record[id]['_04rootspl'].indexOf('-') >= 0){
+                                console.log('-replacing: ' + record[id]['_04rootspl']);
+                                record[id]['_04rootspl'] = record[id]['_04rootspl'].replace('-', ' to ');
+                            }
+                            /*
+                            var chars = record[id]['_04rootspl'].match(/[A-z]/g);
+                            if(chars !== null){
+                                console.log('--replacing:' + record[id]['_04rootspl']);
+                                record[id]['_04rootspl'] = '';
+                            }
+                            else{
+                                console.log('--retaining ' +record[id]['_04rootspl']);
+                            }
+                            */
+                        }
+                        
+
+                        // Separate comma-delimited merged area
                         if(record[id]['_06area'] !== ''){
                             var sep = [',',';','-'];
                             sep.forEach(function(delim){
@@ -502,17 +451,20 @@ Dextraction.prototype.mergedata = function(){
                     var exclude_keys = ['_06loc', '_01hvdate'];
                     var objtemp = {};
                     for(var id in record){
-                        newcsv += '{';
-                        objtemp[id] = {};
-                        for(var fbkey in record[id]){
-                            if(exclude_keys.indexOf(fbkey) === -1){
-                            //if(encode_array.indexOf(fbkey) >= 0){
-                                newcsv += '"' + fbkey + '":"' + utils.cleanField(record[id][fbkey]) + '",';
-                                objtemp[id][fbkey] = utils.cleanField(record[id][fbkey]);
+                        // Exclude rows without _07pdate or _08hvdate
+                        if(record[id]['_07pdate'] != '' && record[id]['_08hvdate'] != ''){
+                            newcsv += '{';
+                            objtemp[id] = {};
+                            for(var fbkey in record[id]){
+                                if(exclude_keys.indexOf(fbkey) === -1){
+                                //if(encode_array.indexOf(fbkey) >= 0){
+                                    newcsv += '"' + fbkey + '":"' + utils.cleanField(record[id][fbkey]) + '",';
+                                    objtemp[id][fbkey] = utils.cleanField(record[id][fbkey]);
+                                }
                             }
+                            newcsv = newcsv.substring(0, newcsv.length-1) + '},';
+                            this.data_processed.push(objtemp[id]);
                         }
-                        newcsv = newcsv.substring(0, newcsv.length-1) + '},';
-                        this.data_processed.push(objtemp[id]);
                     }
                 }
             }            
