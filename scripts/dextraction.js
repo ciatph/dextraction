@@ -3,6 +3,7 @@ const request = require('request');
 var fs = require('fs');
 var readline = require('readline');
 var out = new (require('stream'))();
+var json2csv = require('json2csv').Parser;
 
 var Dextraction = function(){
     // farmland plots data with farmer information
@@ -798,6 +799,7 @@ Dextraction.prototype.appendWeatherData = function(){
         this.data_processed[i]['w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
         this.data_processed[i]['w_drange'] = (total_tmax/denom) / (total_tmin/denom);
         this.data_processed[i]['w_ftmax31'] = ftmax31;
+        this.data_processed[i]['w_paccum'] = paccum;
         this.data_processed[i]['w_pdryday'] = max_p_zero;
         this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
         this.data_processed[i]['w_solar'] = sr;
