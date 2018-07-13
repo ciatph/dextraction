@@ -1,3 +1,4 @@
 /node_modules
-/data/extracted.json
+/data/data_json.json
+/data/data_csv.csv
 /data/weather/*

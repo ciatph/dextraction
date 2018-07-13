@@ -4,6 +4,7 @@ var fs = require('fs');
 var readline = require('readline');
 var out = new (require('stream'))();
 var json2csv = require('json2csv').Parser;
+var utils = require('./utils');
 
 var Dextraction = function(){
     // farmland plots data with farmer information
@@ -22,37 +23,6 @@ var Dextraction = function(){
 
     // array of firebase keys for a farmer record
     this.record_keys = [];
-};
-
-
-/**
- * Count the object length
- * @param {JS object} obj 
- */
-Dextraction.prototype.getObjectLength = function(obj){
-    var count = 0;
-    if(obj !== null && obj !== undefined)
-      count = Object.keys(obj).length;
-    return count;
-};
-
-
-/**
- * Removes tab characters
- * @param {*} str 
- */
-Dextraction.prototype.cleanField = function(str){
-    str = str.toString();
-    try{
-        str = str.replace(/\t/g, '');
-        str = str.replace(/\n/g, '');
-    }
-    catch(e){
-        console.log('error: ' + e + ', replacing: ' + str);
-        return str;
-    }
-
-    return str;
 };
 
 
@@ -77,8 +47,8 @@ Dextraction.prototype.getAllFarmers = function(){
                     for(var farmer in this.data[start][year][user]){
                         for(var plot in this.data[start][year][user][farmer]){
                             if(uniqueids.indexOf(farmer) === -1){
-                                var fname = this.cleanField(this.data[start][year][user][farmer][plot]['_01fname'].toLowerCase().trim());
-                                var lname = this.cleanField(this.data[start][year][user][farmer][plot]['_03lname'].toLowerCase().trim());
+                                var fname = utils.cleanField(this.data[start][year][user][farmer][plot]['_01fname'].toLowerCase().trim());
+                                var lname = utils.cleanField(this.data[start][year][user][farmer][plot]['_03lname'].toLowerCase().trim());
     
                                 uniqueids.push(farmer);
                                 str += '{firstname:"' + fname + '", lastname:"' + lname + '"},'; 
@@ -110,7 +80,7 @@ Dextraction.prototype.loadFarmland = function(){
    request(url, function(error, response, body){
         if(!error && response.statusCode === 200){
             self.data = JSON.parse(body);
-            console.log('loaded data!!! ' + self.getObjectLength(self.data) + '\nall: ' + self.countdata() + '\ngps-only: ' + self.countdata(true));
+            console.log('loaded data!!! ' + utils.getObjectLength(self.data) + '\nall: ' + self.countdata() + '\ngps-only: ' + self.countdata(true));
             
             // Get the farmer record keys
             for(var start in self.data){
@@ -174,95 +144,9 @@ Dextraction.prototype.loadData = function(){
         }
         else{
             self.data_gps = JSON.parse(data);
-            console.log('file read! ' + self.getObjectLength(self.data_gps) + ' new gps records');
+            console.log('file read! ' + utils.getObjectLength(self.data_gps) + ' new gps records');
         }
     });
-};
-
-
-/**
- * Extract a requested parameter from a full date
- * @param {Full date following the format: year-month-day separated by a delimiter} date 
- * @param {Separator of full date's year, month and day } delim, default: "-"
- * @param {Parameter to extract from date: year, month, day} param 
- */
-Dextraction.prototype.getmonth = function(date, delim, param){
-    var delimiter = (delim !==  null) ? delim : "-";
-  
-    if(date === "")
-        return -1;
-  
-    if(date.indexOf(delim) === -1)
-        return -1;
-  
-    var parts = date.split(delim);
-    switch(param){
-        case "year": return parseInt(parts[0]); break;
-        case "month": return parseInt(parts[1]); break;
-        case "day": return parseInt(parts[2]); break;
-        default: return -1; break;
-    }
-};
-
-
-
-/**
- * Combine the first and last names all lowercase
- * Assumes there is only (1) numeric value in the string, which is the plot no.
- * @param {Name: first, middle, last name separated by space} strname 
- * Returns a JS object of format:
- * - name: <first_name> + ' ' + <lastname>
- * - plot: 1|2|3
- */
-Dextraction.prototype.normalizeNames = function(strname){
-    const longnames = ['dela cruz'];
-
-    var name = strname.toLowerCase();
-    var plotno = 1;
-    var final_name = '';
-
-	// remove numbers
-    var numbers = name.match(/\d+/g);
-	if(numbers !== null){
-		numbers = (numbers.map(Number) !== undefined) ? numbers.map(Number) : 1;
-		for(var j=0; j<numbers.length; j++){
-            plotno = numbers[j];
-			name = name.replace(numbers[j], '');
-		}
-    }    
-
-    // combine splitted long surnames defined in _longnames_
-    for(var i=0; i<longnames.length; i++){
-        if(name.indexOf(longnames[i]) >= 0){
-            name = name.replace(longnames[i], longnames[i].replace(/ /g, ''));
-        }
-    }
-    
-    // remove extra marks
-    var hasParenthesis = (name.indexOf('(') >= 0) ? true : false;
-	name = name.replace('()', '');    
-    name = name.split(' ');
-
-    // Remove spaces
-    for(var i=0; i<name.length; i++){
-        name[i] = name[i].replace(/ /g, '');
-        name[i].trim();
-    }
-
-    if(hasParenthesis){
-        final_name = name[0] + name[1];
-    }
-    else{
-        // Has a middle name
-        final_name = (name.length === 3) ? 
-        name[0] + name[2] :
-        name[0] + name[1];
-    }
-
-    return {
-        name: final_name,
-        plot: plotno
-    };
 };
 
 
@@ -344,8 +228,8 @@ Dextraction.prototype.getweatherparams = function(){
   
                         // Dates
                         if(key === '_08hvdate'){
-                            var hvmonth = this.getmonth(data[plot][key], '-', 'month');
-                            var hvyear = this.getmonth(data[plot][key], '-', 'year');
+                            var hvmonth = utils.getmonth(data[plot][key], '-', 'month');
+                            var hvyear = utils.getmonth(data[plot][key], '-', 'year');
                             data[plot]['hvmonth'] = hvmonth;
                             data[plot]['hvyear'] = hvyear;
                             data_str += 'hvmonth:"' + hvmonth + '",';
@@ -445,7 +329,7 @@ Dextraction.prototype.getFarmerRecordPlot = function(farmerId, plotNo){
  */
 Dextraction.prototype.getUpdatedGPS = function(name){
     for(var i=0; i<this.data_gps.length; i++){
-        var dataName = this.normalizeNames(this.data_gps[i].name);
+        var dataName = utils.normalizeNames(this.data_gps[i].name);
         if(dataName.name === name){
             return this.data_gps[i];
         }
@@ -464,7 +348,7 @@ Dextraction.prototype.nameExists = function(searchname){
         for(var user in this.data_farmerinfo[year]){
             for(var farmer in this.data_farmerinfo[year][user]){
                 var name = this.data_farmerinfo[year][user][farmer]['_01fname'] + ' ' + this.data_farmerinfo[year][user][farmer]['_03lname'];
-                var normallized = this.normalizeNames(name).name;
+                var normallized = utils.normalizeNames(name).name;
                 
                 if(normallized === searchname){
                     return farmer; 
@@ -490,103 +374,6 @@ Dextraction.prototype.getCellId = function(coords){
         col: col,
         cell: cell
     };
-};
-
-
-
-/**
- * Checks if a year is aleap year or not
- * @param {*Year} year 
- * Returns TRUE|FALSE
- */
-Dextraction.prototype.isLeapYear = function(year){
-    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
-};
-
-
-
-/**
- * Get the numerical starting index of a month in a year
- * @param month numerical 1-12 month
- * Returns 1-365
- */
-Dextraction.prototype.getdoy = function(date){
-    var datesplit = date.split('-');
-
-    var months = {
-        1:"31",
-        2:"28",
-        3:"31",
-        4:"30",
-        5:"31",
-        6:"30",
-        7:"31",
-        8:"31",
-        9:"30",
-        10:"31",
-        11:"30",
-        12:"31"
-    };
-
-    // Check if leap year
-    months[2] = this.isLeapYear(datesplit[0]) ? 29 : 28;
-
-    var sum = 0;
-    date = date.split('-');
-
-    for(mo in months){
-        if(mo < parseInt(date[1])){
-            sum += parseInt(months[mo]);
-      }
-      else{
-            break;
-        }
-    }
-    return sum + 1;
-};
-
-
-/**
- * Returns the number of days in a month considering the leap years
- * @param date  date
- */
-Dextraction.prototype.getdaysinmonth = function(date){
-    var datesplit = date.split('-');
-
-    var months = {
-        1:"31",
-        2:"28",
-        3:"31",
-        4:"30",
-        5:"31",
-        6:"30",
-        7:"31",
-        8:"31",
-        9:"30",
-        10:"31",
-        11:"30",
-        12:"31"
-    };
-
-    // Check if leap year
-    months[2] = this.isLeapYear(datesplit[0]) ? 29 : 28;
-    return parseInt(months[datesplit[1]]);
-};
-
-
-/**
- * Get the number of months between (2) dates
- * @param {*} date1 
- * @param {*} date2 
- */
-Dextraction.prototype.getmonthdiff = function(date1, date2){
-    date1 = new Date(date1);
-    date2 = new Date(date2);
-
-    var months = (date2.getFullYear() - date1.getFullYear()) * 12;
-    months -= date1.getMonth() + 1;
-    months += date2.getMonth();
-    return months <= 0 ? 0 : months;
 };
 
 
@@ -620,7 +407,7 @@ Dextraction.prototype.mergedata = function(){
         // Add a new field, matches
         this.data_gps[i]['match'] = 'false';
 
-        var new_name = this.normalizeNames(this.data_gps[i].name);
+        var new_name = utils.normalizeNames(this.data_gps[i].name);
 
         // New farmer name (with updated gps) matches a name record from the existing data
         if(farmerlist.array.indexOf(new_name.name) >= 0){
@@ -633,7 +420,7 @@ Dextraction.prototype.mergedata = function(){
             
             if(farmerId !== null){
                 var record = this.getFarmerRecordPlot(farmerId, new_name.plot);
-                if(this.getObjectLength(record) > 0){
+                if(utils.getObjectLength(record) > 0){
                     // Replace the gps coordinates with new values
                     //var gpsupdate = this.getUpdatedGPS(new_name.name);
                     for(var id in record){
@@ -646,7 +433,7 @@ Dextraction.prototype.mergedata = function(){
 
                         // Find the year of harvest
                         if(record[id]['_08hvdate'] !== ''){
-                            var yoh = this.getmonth(record[id]['_08hvdate'],'-','year');
+                            var yoh = utils.getmonth(record[id]['_08hvdate'],'-','year');
                             record[id]['_year_hv'] = yoh.toString().substring(1, yoh.length);
                         }
 
@@ -666,7 +453,7 @@ Dextraction.prototype.mergedata = function(){
                         }        
                         
                         // Match MAP
-                        record[id]['_map'] = this.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
+                        record[id]['_map'] = utils.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
 
                         // Convert _15deg pest damage to integer
                         record[id]['_15deg_num'] = (record[id]['_15deg'] !== '') ? dmg[record[id]['_15deg']] : 0;
@@ -687,6 +474,7 @@ Dextraction.prototype.mergedata = function(){
 
                     // Encode the keys
                     //var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
+                    // Exclude the ff. original fields from the output
                     var exclude_keys = ['_06loc', '_01hvdate'];
                     var objtemp = {};
                     for(var id in record){
@@ -695,8 +483,8 @@ Dextraction.prototype.mergedata = function(){
                         for(var fbkey in record[id]){
                             if(exclude_keys.indexOf(fbkey) === -1){
                             //if(encode_array.indexOf(fbkey) >= 0){
-                                newcsv += '"' + fbkey + '":"' + this.cleanField(record[id][fbkey]) + '",';
-                                objtemp[id][fbkey] = this.cleanField(record[id][fbkey]);
+                                newcsv += '"' + fbkey + '":"' + utils.cleanField(record[id][fbkey]) + '",';
+                                objtemp[id][fbkey] = utils.cleanField(record[id][fbkey]);
                             }
                         }
                         newcsv = newcsv.substring(0, newcsv.length-1) + '},';
@@ -720,18 +508,16 @@ Dextraction.prototype.mergedata = function(){
 
 
 Dextraction.prototype.appendWeatherData = function(){
-    var csv = '[';
     var denom = 0;
 
     // Append weather variables into each record
-    
     for(var i=0; i<this.data_processed.length; i++){
         var record = this.data_processed[i];
 
         // Get the doy
-        var doy = this.getdoy(record._08hvdate);
-        var month = this.getmonth(this.data_processed[i]._08hvdate,'-','month');
-        var days = this.getdaysinmonth(record._08hvdate);
+        var doy = utils.getdoy(record._08hvdate);
+        var month = utils.getmonth(this.data_processed[i]._08hvdate,'-','month');
+        var days = utils.getdaysinmonth(record._08hvdate);
 
         // Weather variables
         var tmax = 0;
@@ -804,31 +590,13 @@ Dextraction.prototype.appendWeatherData = function(){
         this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
         this.data_processed[i]['w_solar'] = sr;
     }
-    
-    // Write to csv-json
-    for(var i=0; i<this.data_processed.length; i++){
-        var record = this.data_processed[i];
-        csv += '{';
-        for(var key in this.data_processed[i]){
-            csv += '"' + key + '":"' + this.data_processed[i][key] + '",'
-        }
-        csv = csv.substring(0, csv.length-1);
-        csv += '},';
-    }
 
-    csv = csv.substring(0, csv.length-1) + ']';
-    fs.writeFile('./data/extracted.json', csv, function(err){
-        if(err){
-            console.log('error in writing data');
-        }
-        else{
-            console.log('data was saved!');
-        }
-    });
+    // Write to files
+    this.writeFiles();
 };
 
 
-/**
+/**`
  * Reads  the weather files into JSON format into ref_weather
  */
 Dextraction.prototype.readWeatherFiles = function(){
@@ -858,7 +626,7 @@ Dextraction.prototype.readWeatherFiles = function(){
                     // Initialize the file record
                     self.ref_weather[filename] = {};
                     var day = 1;
-                    var max = self.isLeapYear('2' + filename.split('.')[1]) ? 366 : 365;
+                    var max = utils.isLeapYear('2' + filename.split('.')[1]) ? 366 : 365;
 
                     rl.on('line', function(line){
                         // Initialize the day
@@ -889,6 +657,58 @@ Dextraction.prototype.readWeatherFiles = function(){
             }
         });
     });
+};
+
+
+/**
+ * Writes processed data into JSON and CSV files
+ */
+Dextraction.prototype.writeFiles = function(){
+    var csv = '[';
+    
+    // Write to JSON
+    for(var i=0; i<this.data_processed.length; i++){
+        var record = this.data_processed[i];
+        csv += '{';
+        for(var key in this.data_processed[i]){
+            csv += '"' + key + '":"' + this.data_processed[i][key] + '",'
+        }
+        csv = csv.substring(0, csv.length-1);
+        csv += '},';
+    }
+
+    
+    csv = csv.substring(0, csv.length-1) + ']';
+    fs.writeFile('./data/data_json.json', JSON.stringify(this.data_processed), function(err){
+        if(err){
+            console.log('error in writing data');
+        }
+        else{
+            console.log('data was saved!');
+        }
+    });
+    
+   // Write JSON string as CSV
+   // Get headers
+   var headers = utils.getObjectKeys(this.data_processed[0]);
+
+   try{
+       const opts = { headers };
+       const parser = new json2csv(opts);
+       const csv = parser.parse(this.data_processed);
+
+       fs.writeFile('./data/data_csv.csv', csv, function(err){
+        if(err){
+            console.log('error in writing data');
+        }
+        else{
+            console.log('data was saved!');
+        }
+    });       
+   }
+   catch(e){
+       console.log('error writing csv');
+   }
 };
 
 
