@@ -6,6 +6,7 @@ var out = new (require('stream'))();
 var json2csv = require('json2csv').Parser;
 var utils = require('./utils');
 
+
 var Dextraction = function(){
     // farmland plots data with farmer information
     this.data;
@@ -73,10 +74,15 @@ Dextraction.prototype.getAllFarmers = function(){
 };
 
 
-Dextraction.prototype.loadFarmland = function(){
+Dextraction.prototype.loadFarmland = function(url){
     var self = this;
+
+    if(url === undefined || url === ''){
+        console.log('Invalid url');
+        return;
+    }
+
     // Online firebase url of all farmland data
-    var url = 'https://us-central1-appdatacollect-3b7d7.cloudfunctions.net/getdata?node=farmland_setup';
    request(url, function(error, response, body){
         if(!error && response.statusCode === 200){
             self.data = JSON.parse(body);
@@ -116,19 +122,37 @@ Dextraction.prototype.loadFarmland = function(){
  * Load data sets
  * - online firebase data
  * - local ISU-modified gps points
+ * @param urlObj JS Object containing REST urls for data
+ * Format:
+ * - farmer_info: Firebase REST url for farmer names
+ * - famrland_setup: Firebase REST url for farmland information
+ * - gps: Url for updated GPS points matched to farmer names
  */
-Dextraction.prototype.loadData = function(){
+Dextraction.prototype.loadData = function(urlObj){
     var self = this;
+
+    // Check urls
+    if(urlObj === undefined || Object.keys(urlObj).length !== 3){
+        console.log('File urls are invalid or missing');
+        return;
+    }
+
+    // Check for empty urls
+    for(key in urlObj){
+        if(urlObj[key] === ''){
+            console.log('Missing url for ' + key);
+            return;
+        }
+    }
     
     // Online firebase url of all farmer information
-    var url = 'https://us-central1-appdatacollect-3b7d7.cloudfunctions.net/getdata?node=farmer_info';
-    request(url, function(error, response, body){
+    request(urlObj.farmer_info, function(error, response, body){
         if(!error && response.statusCode == 200){
             self.data_farmerinfo = JSON.parse(body).data;
             console.log('loaded farmer information!');
 
             // Load the farmland data
-            self.loadFarmland();
+            self.loadFarmland(urlObj.farmland_setup);
         }
         else{
             console.log('error loading farmer information');
@@ -137,7 +161,7 @@ Dextraction.prototype.loadData = function(){
 
 
     // Load ISU-updated data
-    var localUrl = 'data/gps.json';
+    var localUrl = urlObj.gps;
     fs.readFile(localUrl, 'utf8', function(err, data){
         if(err){
             console.log('error reading file ' + err);
@@ -633,7 +657,7 @@ Dextraction.prototype.readWeatherFiles = function(){
                         self.ref_weather[filename][day] = {};
 
                         if(firstline){
-                            console.log('accessing file ' + filename + ', day: ' + day + '\nleap year: ' + max);
+                            console.log('accessing file ' + filename + ', day: ' + day + ', leap year: ' + max);
                             count++;
                         }
                             
