@@ -1,4 +1,4 @@
-###/data/weather/*
+#/data/weather/*
 
 This directory will contain weather data files in which weather data for a year and month will be extracted.
 
