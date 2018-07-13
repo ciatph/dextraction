@@ -406,31 +406,15 @@ Dextraction.prototype.mergedata = function(){
                             // replace all letters
                             var chars = record[id]['_04rootspl'].match(/[A-z]/g);
                             if(chars !== null){
-                                console.log('--replacing:' + record[id]['_04rootspl']);
                                 record[id]['_04rootspl'] = '';
-                            }
-                            else{
-                                console.log('--retaining ' +record[id]['_04rootspl']);
                             }
 
                             // replace dashes
                             if(record[id]['_04rootspl'].indexOf('-') >= 0){
-                                console.log('-replacing: ' + record[id]['_04rootspl']);
                                 record[id]['_04rootspl'] = record[id]['_04rootspl'].replace('-', ' to ');
                             }
-                            /*
-                            var chars = record[id]['_04rootspl'].match(/[A-z]/g);
-                            if(chars !== null){
-                                console.log('--replacing:' + record[id]['_04rootspl']);
-                                record[id]['_04rootspl'] = '';
-                            }
-                            else{
-                                console.log('--retaining ' +record[id]['_04rootspl']);
-                            }
-                            */
                         }
                         
-
                         // Separate comma-delimited merged area
                         if(record[id]['_06area'] !== ''){
                             var sep = [',',';','-'];
@@ -443,6 +427,44 @@ Dextraction.prototype.mergedata = function(){
                             });
                         }
 
+                        // Separate the combined _09pdist_prow and convert to centimeters
+                        if(record[id]['_09pdist_prow'] !== ''){
+                            // Hard-coded!
+                            if(record[id]['_09pdist_prow'].indexOf('40 25') >= 0)
+                                record[id]['_09pdist_prow'] = '40 x 25';
+
+                            // Normalize delimiters to 'x'
+                            record[id]['_09pdist_prow'] = record[id]['_09pdist_prow'].replace(/[,xX*]/g, 'x');
+                            // Remove spaces
+                            record[id]['_09pdist_prow'] = record[id]['_09pdist_prow'].replace(/ /g, '');
+                            // Split data
+                            var size = record[id]['_09pdist_prow'].split('x');
+                            record[id]['_09pdist_prow_col'] = size[0];
+                            record[id]['_09pdist_prow_row'] = (size.length == 2) ? size[1] : size[0];
+
+                            var value_unit_col = utils.getUnitValue(record[id]['_09pdist_prow_col']);
+                            var value_unit_row = utils.getUnitValue(record[id]['_09pdist_prow_row']);
+
+                            // width
+                            if(value_unit_col.value <= utils.MAX_CENTIMETER_THRESHOLD && value_unit_col.unit == ''){
+                                value_unit_col.unit = utils.DEFAULT_UNIT;
+                            }
+
+                            if(value_unit_row.value <= utils.MAX_CENTIMETER_THRESHOLD && value_unit_row.unit == ''){
+                                value_unit_row.unit = utils.DEFAULT_UNIT;
+                            }          
+                            
+                            if(value_unit_col.value > utils.MAX_CENTIMETER_THRESHOLD && value_unit_col.unit == ''){
+                                value_unit_col.unit = 'cm';
+                            }        
+                            
+                            if(value_unit_row.value > utils.MAX_CENTIMETER_THRESHOLD && value_unit_row.unit == ''){
+                                value_unit_row.unit = 'cm';
+                            }        
+                            
+                            record[id]['_09pdist_prow_col'] = utils.convertToCentimeter(value_unit_col.unit, value_unit_col.value);
+                            record[id]['_09pdist_prow_row'] = utils.convertToCentimeter(value_unit_row.unit, value_unit_row.value);
+                        }
                     }
 
                     // Encode the keys

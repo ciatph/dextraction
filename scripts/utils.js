@@ -3,7 +3,11 @@
  */
 
 var Utils = function(){
+    // Max value threshold to consider if value is in centimeters
+    this.MAX_CENTIMETER_THRESHOLD = 12;
 
+    // Default unit to use for values without given units and are < MAX_CENTIMETER_THRESHOLD
+    this.DEFAULT_UNIT = 'm';
 };
 
 /**
@@ -227,6 +231,56 @@ Utils.prototype.getmonthdiff = function(date1, date2){
     months += date2.getMonth();
     return months <= 0 ? 0 : months;
 };
+
+
+/**
+ * Converts a given value and metric to hectares
+ * @param $metric  metric unit 
+ * @param $value 	value
+ */
+Utils.prototype.convertToCentimeter = function(metric, value){
+    var metric = metric.toLowerCase();
+    var metric_list = ['cm','ft','m','frpt'];
+
+    // Remove all characters
+    var converted = parseFloat(value.replace(/[^0-9,. ]/g,''));
+
+    if(metric_list.indexOf(metric) >= 0){
+        if(metric === 'cm'){
+
+        }
+        else if(metric === 'm'){
+            converted = converted * 100;
+        }
+        else if(metric === 'ft' || metric === 'fprt'){
+            converted = converted * 30.48;
+        }
+    }
+    return converted;
+};
+
+
+/**
+ * Accepts a single value-unit pair. Returns the value and unit or blank, if none
+ * Checks if a value can be considered for centimeter unit
+ * @param data 	single value-unit pair
+ */	
+Utils.prototype.getUnitValue = function(data){
+    var value = data.toLowerCase(data);
+    var unit = '';
+    var unit = value.replace(/[^a-z ]/g, '');
+    var value = value.replace(/[^0-9., ]/g, '');
+    
+    if(value >= this.MAX_CENTIMETER_THRESHOLD && unit === ''){
+        unit = 'cm';
+    }
+
+    return {
+        value: value,
+        unit: unit
+    }
+};
+
 
 
 module.exports = new Utils();
