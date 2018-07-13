@@ -1,6 +1,6 @@
 #/data/weather/*
 
-This directory will contain weather data files in which weather data for a year and month will be extracted.
+This directory will contain weather data files in which weather data for a year and month will be extracted. Please contact us for the weather data files at **ciat.ph@gmail.com**.
 
 ##Filename 
 Weather files start with _"nsch"_ followed by a 6-digit number representing the cell id. The last 3-digits starting after the dot "." represents the year for which the data was taken.
@@ -34,6 +34,9 @@ Column data or variables found inside the weather files.
 7. **Wind Speed (WS)** - m/s
 8. **Precipitation (P)** - mm/d
 
+##File Content
+Each weather data file contains a miscellaneous header (which should be ignored when reading), and rows of data. Each row correspond to a day in a year.
+<br><br>
 
 ### Data Dictionary of Fields to be Generated and Exported
 
@@ -56,3 +59,7 @@ Column data or variables found inside the weather files.
 `VPavg = VP / DaysInMonth`
 10. **SRaccum** - Solar Radiation Accumulated
 `SRaccum = sum(SR)`
+
+
+#### Last Updated: 
+2018/07/13
