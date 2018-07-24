@@ -79,6 +79,38 @@ Utils.prototype.getmonth = function(date, delim, param){
 
 
 /**
+ * Returns a date with added number of months
+ * @param {JS Date string. Must follow the format yyyy/mm/dd} date 
+ * @param {Number of months to add} n 
+ * @param {type of date format to return: string|'date' (JS Date Object)|doy} type
+ * @param {Character delimiter used to separate date yyyy/mm/dd} delimeter
+ */
+Utils.prototype.addmonths = function(date, n, type, delimeter){
+    // Make the string date a JS Date Object
+    var newDate = new Date(date);
+    var sep = (delimeter !== undefined) ? delimeter : '/';
+
+    // Add months
+    var d = new Date(newDate.setMonth(newDate.getMonth() + n));
+    var strDate = d.toLocaleDateString().split(sep);
+    
+    if(type === 'string'){
+        // Return the new date as a string
+        return strDate.join('-');
+    }
+    else if(type === 'date'){
+        // Return a Javascript Object string
+        return d;
+    }
+    else if(type === 'doy'){
+        // Return the day of year
+        console.log('new date: ' + strDate.join('-'));
+        return this.getdoy(strDate.join('-'));
+    }
+};
+
+
+/**
  * Combine the first and last names all lowercase
  * Assumes there is only (1) numeric value in the string, which is the plot no.
  * @param {Name: first, middle, last name separated by space} strname 
