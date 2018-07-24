@@ -707,13 +707,13 @@ Dextraction.prototype.writeFiles = function(){
        const csv = parser.parse(this.data_processed);
 
        fs.writeFile('./data/data_csv.csv', csv, function(err){
-        if(err){
-            console.log('error in writing data');
-        }
-        else{
-            console.log('data was saved!');
-        }
-    });       
+            if(err){
+                console.log('error in writing data');
+            }
+            else{
+                console.log('data was saved!');
+            }
+        });       
    }
    catch(e){
        console.log('error writing csv');
