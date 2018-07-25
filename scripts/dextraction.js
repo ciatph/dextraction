@@ -457,7 +457,19 @@ Dextraction.prototype.mergedata = function(){
                             });
                         }
 
-                        // 10. Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
+                        // 10. Separate _14pstcide_type if comma-delimited
+                        if(record[id]['_14pstcide_type'] !== ''){
+                            if(record[id]['_14pstcide_type'].indexOf(',') >= 0){
+                                var temp = record[id]['_14pstcide_type'].split(',');
+                                var head = '_14pstcide_type';
+                                if(temp.length > 1){
+                                    for(var i=0; i<temp.length; i++)
+                                        record[id][(i === 0) ? head : head + '_' + i] = temp[i];
+                                }
+                            }
+                        }
+
+                        // 11. Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
                         // And delete BASAL_QTY. Ignore any values in BASAL_QTY
                         if(record[id]['BASAL_TYPE'] === 'Others' || record[id]['BASAL_TYPE'] === '')
                             record[id]['BASAL_TYPE'] = record[id]['BASAL_QTY'];
@@ -469,7 +481,7 @@ Dextraction.prototype.mergedata = function(){
                             record[id]['TOP_TYPE'] = record[id]['TOP_QTY'];         
 
 
-                        // 11. Separate the combined _09pdist_prow and convert to centimeters
+                        // 12. Separate the combined _09pdist_prow and convert to centimeters
                         if(record[id]['_09pdist_prow'] !== ''){
                             // Hard-coded!
                             if(record[id]['_09pdist_prow'].indexOf('40 25') >= 0)
