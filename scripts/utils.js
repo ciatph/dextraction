@@ -91,7 +91,7 @@ Utils.prototype.addmonths = function(date, n, type, delimeter){
     var sep = (delimeter !== undefined) ? delimeter : '/';
 
     // Add months
-    var d = new Date(newDate.setMonth(newDate.getMonth() + n));
+    var d = new Date(newDate.setMonth(newDate.getMonth() + parseInt(n)));
     var strDate = d.toLocaleDateString().split(sep);
     
     if(type === 'string'){

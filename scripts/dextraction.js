@@ -24,6 +24,9 @@ var Dextraction = function(){
 
     // array of firebase keys for a farmer record
     this.record_keys = [];
+
+    // Default average _11growthstg (months after P&D was observed)
+    this.AVG_GROWTH_STG_MAP_VALUE = 7;
 };
 
 
@@ -374,20 +377,48 @@ Dextraction.prototype.mergedata = function(){
                         record[id]['_lat'] = this.data_gps[i].Lat;
                         delete record[id]['_06loc'];
 
-                        // Find the year of harvest
-                        if(record[id]['_08hvdate'] !== ''){
-                            var yoh = utils.getmonth(record[id]['_08hvdate'],'-','year');
-                            record[id]['_year_hv'] = yoh.toString().substring(1, yoh.length);
+                        // Get the month after where P&D was observed
+                        record[id]['_11growthstg_clean'] = this.AVG_GROWTH_STG_MAP_VALUE; // default value: 7
+                        record[id]['w_growthstg_date'] = '';
+
+                        // Get and process the _11growthstg if not empty
+                        if(record[id]['_11growthstg'] !== ''){                         
+                            // Check for a range of values separated by ","
+                            if(record[id]['_11growthstg'].indexOf(',') >= 0){
+                                console.log('--DETECTED RANGE, ' + record[id]['_11growthstg']);
+                            }
+                    
+                            record[id]['_11growthstg_clean'] = (record[id]['_11growthstg'].indexOf(',') >= 0) ? 
+                                record[id]['_11growthstg'].split(',')[0] : record[id]['_11growthstg'];           
+                                
+                            // Clean strings if contains "harvest"
+                            if(record[id]['_11growthstg_clean'].indexOf("harvest") >= 0)
+                                record[id]['_11growthstg_clean'] = utils.getmonth(record[id]['_08hvdate']);
                         }
+
+                        // Find the P&D  growth stage date (date after P&D was observed)
+                        if(record[id]['_07pdate'] !== ''){
+                            record[id]['w_growthstg_date'] = utils.addmonths(record[id]['_07pdate'], record[id]['_11growthstg_clean'], 'string');
+                            record[id]['_yr_obs'] = utils.getmonth(record[id]['w_growthstg_date'], '-', 'year').toString(); 
+                        }                       
 
                         // Find the cell ID
                         var wh = this.getCellId({Lon:this.data_gps[i].Lon, Lat:this.data_gps[i].Lat});
                         record[id]['row'] = wh.row;
                         record[id]['col'] = wh.col;
-                        var cell = 'nsch' + wh.cell + '.' + record[id]['_year_hv'];  
-                        record[id]['cell_id'] = cell;
 
-                        if(unique_cellid.indexOf(cell) === -1 && record[id]['_year_hv'] !== undefined){
+                        if(record[id]['_yr_obs'] !== undefined){
+                            if(record[id]['_yr_obs'].length === 4){
+                                // TO-DO do not remove missing weather files, do not accept invalid-years (length < 4)
+                                if(record[id]['_yr_obs'] !== '2018'){
+                                    var cell = 'nsch' + wh.cell + '.' + record[id]['_yr_obs'].substring(1, record[id]['_yr_obs'].length);  
+                                    record[id]['cell_id'] = cell;
+                                }
+                            }
+                        }
+
+                        // Initialize empty objects for ref_weather
+                        if(unique_cellid.indexOf(cell) === -1 && record[id]['_yr_obs'] !== undefined){
                             unique_cellid.push(cell);
                             console.log('cell: ' + cell);
 
@@ -523,10 +554,13 @@ Dextraction.prototype.appendWeatherData = function(){
     for(var i=0; i<this.data_processed.length; i++){
         var record = this.data_processed[i];
 
-        // Get the doy
-        var doy = utils.getdoy(record._08hvdate);
-        var month = utils.getmonth(this.data_processed[i]._08hvdate,'-','month');
-        var days = utils.getdaysinmonth(record._08hvdate);
+        // Get date parameters
+        var doy = utils.getdoy(record.w_growthstg_date);// harvest date: utils.getdoy(record._08hvdate);
+        var month = utils.getmonth(record.w_growthstg_date,'-','month');
+        var days = utils.getdaysinmonth(record.w_growthstg_date);
+
+        console.log('doy: ' + doy + ', wh_date: ' + record.w_growthstg_date + ', pdate: ' + record._07pdate + ', growthstg: ' + record._11growthstg_clean + 
+            '\ndirect-doy: ' + utils.addmonths(record._07pdate, record._11growthstg_clean, 'doy') + ', year_hv: ' + record._yr_obs);
 
         // Weather variables
         var tmax = 0;
@@ -549,44 +583,49 @@ Dextraction.prototype.appendWeatherData = function(){
             var cell = this.data_processed[i].cell_id;
             denom++;
 
-            if(Object.keys(this.ref_weather[cell]).length > 0){
-                // Temperature max
-                if(this.ref_weather[cell][j].tmax > tmax)
-                    tmax = parseFloat(this.ref_weather[cell][j].tmax);
+            if(this.ref_weather[cell] !== undefined){
+                if(Object.keys(this.ref_weather[cell]).length > 0){
+                    // Temperature max
+                    if(this.ref_weather[cell][j].tmax > tmax)
+                        tmax = parseFloat(this.ref_weather[cell][j].tmax);
 
-                // Temperature min
-                if(this.ref_weather[cell][j].tmin < tmin)
-                    tmin = parseFloat(this.ref_weather[cell][j].tmin);  
+                    // Temperature min
+                    if(this.ref_weather[cell][j].tmin < tmin)
+                        tmin = parseFloat(this.ref_weather[cell][j].tmin);  
 
-                // Average temperatures
-                total_tmax += parseFloat(this.ref_weather[cell][j].tmax);
-                total_tmin += parseFloat(this.ref_weather[cell][j].tmin);
+                    // Average temperatures
+                    total_tmax += parseFloat(this.ref_weather[cell][j].tmax);
+                    total_tmin += parseFloat(this.ref_weather[cell][j].tmin);
 
-                // Frequency of days with Tmax >= 31 degrees Celsius
-                if(this.ref_weather[cell][j].tmax >= 31)
-                    ftmax31++;
+                    // Frequency of days with Tmax >= 31 degrees Celsius
+                    if(this.ref_weather[cell][j].tmax >= 31)
+                        ftmax31++;
 
-                // Precipitation accumulated
-                paccum += parseFloat(this.ref_weather[cell][j].p);    
+                    // Precipitation accumulated
+                    paccum += parseFloat(this.ref_weather[cell][j].p);    
 
-                // Vapor Pressure
-                vp += parseFloat(this.ref_weather[cell][j].vp);
+                    // Vapor Pressure
+                    vp += parseFloat(this.ref_weather[cell][j].vp);
 
-                // Solar radiattion
-                sr += parseFloat(this.ref_weather[cell][j].sr);
-                
-                // Precipitation Dry Day; max from the number of consecutive dry days (P=0)
-                if(parseInt(this.ref_weather[cell][j].p) === 0){
-                    zero++;
-                }
-                else{
-                    if(zero !== 0){
-                        if(zero > max_p_zero)
-                            max_p_zero = zero;
-                        zero = 0;
+                    // Solar radiattion
+                    sr += parseFloat(this.ref_weather[cell][j].sr);
+                    
+                    // Precipitation Dry Day; max from the number of consecutive dry days (P=0)
+                    if(parseInt(this.ref_weather[cell][j].p) === 0){
+                        zero++;
                     }
-                }
-            }              
+                    else{
+                        if(zero !== 0){
+                            if(zero > max_p_zero)
+                                max_p_zero = zero;
+                            zero = 0;
+                        }
+                    }
+                }  
+            }    
+            else{
+                console.log('WARNING cellid ' + cell + ' is undefined!');
+            }        
         }
 
         this.data_processed[i]['w_tmax'] = parseFloat(tmax);
@@ -658,7 +697,8 @@ Dextraction.prototype.readWeatherFiles = function(){
                         }
                         
                         firstline = false;
-                        if(count === wh.length - 1 && day >= max){
+
+                        if(count === wh.length && day >= max){
                             self.appendWeatherData();   
                         }
                     });
