@@ -112,7 +112,7 @@ Dextraction.prototype.loadFarmland = function(url){
             }
 
             // count data
-            self.mergedata();
+            self.mergeCleanData();
         }
         else{
             console.log('error loading farmland data!!!');
@@ -163,7 +163,7 @@ Dextraction.prototype.loadData = function(urlObj){
     });
 
 
-    // Load ISU-updated data
+    // Load local ISU-updated data
     var localUrl = urlObj.gps;
     fs.readFile(localUrl, 'utf8', function(err, data){
         if(err){
@@ -324,7 +324,7 @@ Dextraction.prototype.getCellId = function(coords){
  * Merge the new ISU-edited GPS data to existing data matched by farmer names
  * Process and clean data cells
  */
-Dextraction.prototype.mergedata = function(){
+Dextraction.prototype.mergeCleanData = function(){
     var count_match = 0;
     var count_missed = 0;
     var farmerlist = this.getAllFarmers();
@@ -463,8 +463,8 @@ Dextraction.prototype.mergedata = function(){
                                 var temp = record[id]['_14pstcide_type'].split(',');
                                 var head = '_14pstcide_type';
                                 if(temp.length > 1){
-                                    for(var i=0; i<temp.length; i++)
-                                        record[id][(i === 0) ? head : head + '_' + i] = temp[i];
+                                    for(var j=0; j<temp.length; j++)
+                                        record[id][(j === 0) ? head : head + '_' + j] = temp[ij;
                                 }
                             }
                         }
