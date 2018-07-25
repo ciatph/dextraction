@@ -322,7 +322,7 @@ Dextraction.prototype.getCellId = function(coords){
 
 /**
  * Merge the new ISU-edited GPS data to existing data matched by farmer names
- * 
+ * Process and clean data cells
  */
 Dextraction.prototype.mergedata = function(){
     var count_match = 0;
@@ -352,7 +352,7 @@ Dextraction.prototype.mergedata = function(){
 
         var new_name = utils.normalizeNames(this.data_gps[i].name);
 
-        // New farmer name (with updated gps) matches a name record from the existing data
+        // New farmer name (with updated gps from ISU's updated records) matches a name record from the existing data
         if(farmerlist.array.indexOf(new_name.name) >= 0){
             // New farmer names matched with farmer names in list
             //this.data_gps[i]['match'] = 'true';
@@ -371,13 +371,13 @@ Dextraction.prototype.mergedata = function(){
                     for(var id in record){
                         count_gps_all++;
                         
-                        // Split the Lon and Lat and update with ISU's new GPS points
+                        // 1. Split the Lon and Lat and update with ISU's new GPS points
                         record[id]['_06loc'] = '';
                         record[id]['_lon'] = this.data_gps[i].Lon;
                         record[id]['_lat'] = this.data_gps[i].Lat;
                         delete record[id]['_06loc'];
 
-                        // Get the month after where P&D was observed
+                        // 2. Get the month after where P&D was observed
                         record[id]['_11growthstg_clean'] = this.AVG_GROWTH_STG_MAP_VALUE; // default value: 7
                         record[id]['w_growthstg_date'] = '';
 
@@ -391,18 +391,18 @@ Dextraction.prototype.mergedata = function(){
                             record[id]['_11growthstg_clean'] = (record[id]['_11growthstg'].indexOf(',') >= 0) ? 
                                 record[id]['_11growthstg'].split(',')[0] : record[id]['_11growthstg'];           
                                 
-                            // Clean strings if contains "harvest"
+                            // 3. Clean strings if contains "harvest"
                             if(record[id]['_11growthstg_clean'].indexOf("harvest") >= 0)
                                 record[id]['_11growthstg_clean'] = utils.getmonth(record[id]['_08hvdate']);
                         }
 
-                        // Find the P&D  growth stage date (date after P&D was observed)
+                        // 4. Find the P&D  growth stage date (date after P&D was observed)
                         if(record[id]['_07pdate'] !== ''){
                             record[id]['w_growthstg_date'] = utils.addmonths(record[id]['_07pdate'], record[id]['_11growthstg_clean'], 'string');
                             record[id]['_yr_obs'] = utils.getmonth(record[id]['w_growthstg_date'], '-', 'year').toString(); 
                         }                       
 
-                        // Find the cell ID
+                        // 5. Find the weather cell ID
                         var wh = this.getCellId({Lon:this.data_gps[i].Lon, Lat:this.data_gps[i].Lat});
                         record[id]['row'] = wh.row;
                         record[id]['col'] = wh.col;
@@ -426,13 +426,13 @@ Dextraction.prototype.mergedata = function(){
                             this.ref_weather[cell] = {};           
                         }        
                         
-                        // Match MAP
+                        // 6. Match MAP - number of months after planting when crop was harvested
                         record[id]['_map'] = utils.getmonthdiff(record[id]['_07pdate'], record[id]['_08hvdate']);
 
-                        // Convert _15deg pest damage to integer
+                        // 7. Convert _15deg pest damage to integer
                         record[id]['_15deg_num'] = (record[id]['_15deg'] !== '') ? dmg[record[id]['_15deg']] : 0;
 
-                        // Remove misplaced dates on _04rootspl
+                        // 8. Remove misplaced dates on _04rootspl
                         if(record[id]['_04rootspl'] !== ''){
                             // replace all letters
                             var chars = record[id]['_04rootspl'].match(/[A-z]/g);
@@ -446,7 +446,7 @@ Dextraction.prototype.mergedata = function(){
                             }
                         }
                         
-                        // Separate comma-delimited merged area
+                        // 9. Separate comma-delimited merged area
                         if(record[id]['_06area'] !== ''){
                             var sep = [',',';','-'];
                             sep.forEach(function(delim){
@@ -457,7 +457,7 @@ Dextraction.prototype.mergedata = function(){
                             });
                         }
 
-                        // Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
+                        // 10. Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
                         // And delete BASAL_QTY. Ignore any values in BASAL_QTY
                         if(record[id]['BASAL_TYPE'] === 'Others' || record[id]['BASAL_TYPE'] === '')
                             record[id]['BASAL_TYPE'] = record[id]['BASAL_QTY'];
@@ -469,7 +469,7 @@ Dextraction.prototype.mergedata = function(){
                             record[id]['TOP_TYPE'] = record[id]['TOP_QTY'];         
 
 
-                        // Separate the combined _09pdist_prow and convert to centimeters
+                        // 11. Separate the combined _09pdist_prow and convert to centimeters
                         if(record[id]['_09pdist_prow'] !== ''){
                             // Hard-coded!
                             if(record[id]['_09pdist_prow'].indexOf('40 25') >= 0)
