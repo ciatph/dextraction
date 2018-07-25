@@ -464,24 +464,38 @@ Dextraction.prototype.mergeCleanData = function(){
                                 var head = '_14pstcide_type';
                                 if(temp.length > 1){
                                     for(var j=0; j<temp.length; j++)
-                                        record[id][(j === 0) ? head : head + '_' + j] = temp[ij;
+                                        record[id][head + '_' + (j + 1)] = temp[j];
                                 }
+                            }
+                            else{
+                                record[id]['_14pstcide_type_1'] = record[id]['_14pstcide_type'];
                             }
                         }
 
-                        // 11. Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
+                        // 11. Remove strings from _12freq; pesticide frequency rate
+                        if(record[id]['_12freq'] !== ''){
+                            var temp = record[id]['_12freq'].split(',');
+                            if(temp.length > 1){
+                                record[id]['_12freq'] = temp[0].replace(/\D+/g, '');
+                            }
+                            else{
+                                record[id]['_12freq'] = record[id]['_12freq'].replace(/\D+/g, '');
+                            }
+                        }
+
+                        // 12. Clean BASAL_TYPE: If BASAL_TYPE contains 'Others', copy top BASAL_QTY value to it
                         // And delete BASAL_QTY. Ignore any values in BASAL_QTY
                         if(record[id]['BASAL_TYPE'] === 'Others' || record[id]['BASAL_TYPE'] === '')
                             record[id]['BASAL_TYPE'] = record[id]['BASAL_QTY'];
 
-                            if(record[id]['SIDE_TYPE'] === 'Others' || record[id]['SIDE_TYPE'] === '')
+                        if(record[id]['SIDE_TYPE'] === 'Others' || record[id]['SIDE_TYPE'] === '')
                             record[id]['SIDE_TYPE'] = record[id]['SIDE_QTY'];
                             
-                            if(record[id]['TOP_TYPE'] === 'Others' || record[id]['TOP_TYPE'] === '')
+                        if(record[id]['TOP_TYPE'] === 'Others' || record[id]['TOP_TYPE'] === '')
                             record[id]['TOP_TYPE'] = record[id]['TOP_QTY'];         
 
 
-                        // 12. Separate the combined _09pdist_prow and convert to centimeters
+                        // 13. Separate the combined _09pdist_prow and convert to centimeters
                         if(record[id]['_09pdist_prow'] !== ''){
                             // Hard-coded!
                             if(record[id]['_09pdist_prow'].indexOf('40 25') >= 0)
@@ -524,7 +538,7 @@ Dextraction.prototype.mergeCleanData = function(){
                     // Encode the keys
                     //var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
                     // Exclude the ff. original fields from the output
-                    var exclude_keys = ['_06loc', '_01hvdate','BASAL_QTY','SIDE_QTY','TOP_QTY','_12areapl'];
+                    var exclude_keys = ['_06loc', '_01hvdate','BASAL_QTY','SIDE_QTY','TOP_QTY','_12areapl','_14pstcide_type'];
                     var objtemp = {};
                     for(var id in record){
                         // Exclude rows without _07pdate or _08hvdate
