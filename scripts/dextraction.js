@@ -27,6 +27,9 @@ var Dextraction = function(){
 
     // Default average _11growthstg (months after P&D was observed)
     this.AVG_GROWTH_STG_MAP_VALUE = 7;
+
+    // Container of unique user-encoded pesticide names
+    this.ref_pesticide = [];
 };
 
 
@@ -384,10 +387,6 @@ Dextraction.prototype.mergeCleanData = function(){
                         // Get and process the _11growthstg if not empty
                         if(record[id]['_11growthstg'] !== ''){                         
                             // Check for a range of values separated by ","
-                            if(record[id]['_11growthstg'].indexOf(',') >= 0){
-                                console.log('--DETECTED RANGE, ' + record[id]['_11growthstg']);
-                            }
-                    
                             record[id]['_11growthstg_clean'] = (record[id]['_11growthstg'].indexOf(',') >= 0) ? 
                                 record[id]['_11growthstg'].split(',')[0] : record[id]['_11growthstg'];           
                                 
@@ -457,22 +456,7 @@ Dextraction.prototype.mergeCleanData = function(){
                             });
                         }
 
-                        // 10. Separate _14pstcide_type if comma-delimited
-                        if(record[id]['_14pstcide_type'] !== ''){
-                            if(record[id]['_14pstcide_type'].indexOf(',') >= 0){
-                                var temp = record[id]['_14pstcide_type'].split(',');
-                                var head = '_14pstcide_type';
-                                if(temp.length > 1){
-                                    for(var j=0; j<temp.length; j++)
-                                        record[id][head + '_' + (j + 1)] = temp[j];
-                                }
-                            }
-                            else{
-                                record[id]['_14pstcide_type_1'] = record[id]['_14pstcide_type'];
-                            }
-                        }
-
-                        // 11. Remove strings from _12freq; pesticide frequency rate
+                        // 10. Remove strings from _12freq; pesticide frequency rate
                         if(record[id]['_12freq'] !== ''){
                             var temp = record[id]['_12freq'].split(',');
                             if(temp.length > 1){
@@ -480,6 +464,36 @@ Dextraction.prototype.mergeCleanData = function(){
                             }
                             else{
                                 record[id]['_12freq'] = record[id]['_12freq'].replace(/\D+/g, '');
+                            }
+                        }                        
+
+                        // 11. Separate _14pstcide_type into distinct pesticides if comma-delimited
+                        if(record[id]['_14pstcide_type'] !== ''){
+                            var exclude_values = ['na','none'];
+
+                            // Check if _14pstcide_type contains multiple values separated by comma
+                            if(record[id]['_14pstcide_type'].indexOf(',') >= 0){
+                                var temp = record[id]['_14pstcide_type'].replace(/ /g, '').toLowerCase().split(',');
+ 
+                                if(temp.length > 1){
+                                    for(var j=0; j<temp.length; j++){
+                                        // Create a new pesticide object, mark it as (1) if not among exluded list
+                                        if(exclude_values.indexOf(temp[j]) === -1){
+                                            record[id]['_14pstcide_type_' + temp[j]] = 1;
+                                            record[id]['_12freq_' + temp[j]] = record[id]['_12freq'];
+                                        }
+                                    }
+                                }
+                            }
+                            else{
+                                // _14pstcide_type has only (1) value
+                                var header_value = record[id]['_14pstcide_type'].replace(/ /g, '').toLowerCase();
+
+                                if(exclude_values.indexOf(header_value) === -1){
+                                    // Create a new pesticide object, mark it as (1) if not among exluded list
+                                    record[id]['_14pstcide_type_' + header_value] = 1;    
+                                    record[id]['_12freq_' + header_value] = record[id]['_12freq'];
+                                }
                             }
                         }
 
@@ -538,7 +552,7 @@ Dextraction.prototype.mergeCleanData = function(){
                     // Encode the keys
                     //var encode_array = ['_fid', 'row','col','cell_id','_07pdate','_08hvdate','_lon','_lat', '_year', '_year_hv','_map'];
                     // Exclude the ff. original fields from the output
-                    var exclude_keys = ['_06loc', '_01hvdate','BASAL_QTY','SIDE_QTY','TOP_QTY','_12areapl','_14pstcide_type'];
+                    var exclude_keys = ['_06loc', '_01hvdate','BASAL_QTY','SIDE_QTY','TOP_QTY','_12areapl'/*,'_14pstcide_type'*/];
                     var objtemp = {};
                     for(var id in record){
                         // Exclude rows without _07pdate or _08hvdate
@@ -567,7 +581,21 @@ Dextraction.prototype.mergeCleanData = function(){
         }
     }
 
-    // Read associated weather files
+    // Get an overhead of unique user-encoded pesticide values
+    for(var i=0; i<this.data_processed.length; i++){
+        var keys = utils.getObjectKeys(this.data_processed[i]);
+        for(var j=0; j<keys.length; j++){
+            if(keys[j].indexOf('_14pstcide') >= 0 && keys[j] !== '_14pstcide_type'){
+                if(this.ref_pesticide.indexOf(keys[j]) === -1)
+                    this.ref_pesticide.push(keys[j]);
+            }
+        }
+    }
+    
+    
+
+
+    // Reondad associated weather files
     this.readWeatherFiles();
     console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all + '\nall-data count: ' +Object.keys(this.data_processed).length);    
 };
@@ -575,6 +603,7 @@ Dextraction.prototype.mergeCleanData = function(){
 
 Dextraction.prototype.appendWeatherData = function(){
     var denom = 0;
+    var unique_pesticide = [];
 
     // Append weather variables into each record
     for(var i=0; i<this.data_processed.length; i++){
@@ -663,6 +692,22 @@ Dextraction.prototype.appendWeatherData = function(){
         this.data_processed[i]['w_pdryday'] = max_p_zero;
         this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
         this.data_processed[i]['w_solar'] = sr;
+
+        // Clean undefined _14psticide_type_* cells
+        for(var j=0; j<this.ref_pesticide.length; j++){
+            // Process undefined pesticides
+            if(this.data_processed[i][this.ref_pesticide[j]] === undefined){
+                this.data_processed[i][this.ref_pesticide[j]] = 0;
+            }
+
+            // Process undefined _12freq pesticide frequency
+            var freq = this.ref_pesticide[j].substring(this.ref_pesticide[j].indexOf('type') + 4, this.ref_pesticide[j].length);
+            console.log('freq check: ' + freq);
+            if(this.data_processed[i]['_12freq' + freq] === undefined){
+                this.data_processed[i]['_12freq' + freq] = 0;
+            }         
+             
+        }        
     }
 
     // Write to files
