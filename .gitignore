@@ -1,4 +1,5 @@
 /node_modules
-/data/data_json.json
-/data/data_csv.csv
+/data/*.json
+/data/*.csv
 /data/weather/*
+/data/weather/graphr/.Rhistory
