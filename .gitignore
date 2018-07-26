@@ -2,4 +2,6 @@
 /data/*.json
 /data/*.csv
 /data/weather/*
+!/data/weather/graphr/graphr.R*
+!/data/weather/graphr/README.md*
 /data/weather/graphr/.Rhistory
