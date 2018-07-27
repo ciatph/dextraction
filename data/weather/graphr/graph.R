@@ -40,10 +40,10 @@ loadData <- function(filename, type = NULL, path=NULL){
 }
 
 
-
 ## Plots 2 numerical values in (1) graph
 ## Used for plotting temperature max and temperature min
-plotGraph <- function(tmax, tmin, index = NULL){
+## Creates low-resolution graphics
+plotGraph <- function(tmax, tmin, precip, index = NULL){
   # Optional unique file index
   file_no <- '';
   
@@ -85,17 +85,24 @@ plotGraph <- function(tmax, tmin, index = NULL){
   # Set the ticks interval for the y axis tmax
   axis(2, las=1, at=10*0:g_range[2])  
   
+  par(new = TRUE)
+  
+  # Graph precipitation
+  plot(precip, type='o', col='black', ylim=g_range, axes=FALSE, ann=FALSE)
+  
+  # Set the ticks interval for the y axis tmax
+  axis(2, las=1, at=10*0:g_range[2])  
+  
   
   # Create a legend at (1, g_range[2]) that is slightly smaller 
   # (cex) and uses the same line colors and points used by 
   # the actual plots 
-  legend(1, g_range[2], c("Tmax","Tmin"), cex=0.8, 
-         col=c("blue","red"), pch=21:22, lty=1:2);  
+  legend(1, g_range[2], c("Tmax","Tmin","Precipitation"), cex=0.8, 
+         col=c("red","blue","black"), pch=21:22, lty=1:2);  
   
   # Save the file.
   dev.off()
 }
-
 
 
 ## Plots the tmax and tmin using ggplot2
@@ -160,7 +167,6 @@ plotGraphPrecip <- function(df, index = NULL){
 }
 
 
-
 # Plots a single-axis graph using ggplot2
 plotGraphSingle <- function(df, index = NULL){
   # Output image file
@@ -219,7 +225,8 @@ wh_object <- function(){
   # Plot the tmax and tmin graph using plot
   plotgraph <- function(){
     for(i in 1:length(files)){
-      plotGraph(getdatalist(i)$tmin, getdatalist(i)$tmax, files[i])
+      f <- getdatalist(i)
+      plotGraph(f$tmin, f$tmax, f$p, files[i])
      }
   }
   
@@ -257,8 +264,9 @@ run <- function(){
   # Load data from all files
   d$load()
   
-  # Plot the graphs from files
-  # d$plotgraph()
+  # Plot the the tmax, tmin and precipitation graphs from files
+  # low-resolution graphics
+  d$plotgraph()
   
   # Plot the tmax and tmin graphs using ggplot2
   d$plotgraphview()
