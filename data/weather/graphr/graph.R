@@ -5,7 +5,6 @@ library(data.table)
 projDir <- ''
 imageDir <- paste0(projDir, 'image/')
 files <- c('nsch421688.014','nsch421688.015','nsch421688.016','nsch421689.014','nsch421689.016')
-f <- NULL
 
 
 ## Load text file data 
@@ -108,18 +107,19 @@ plotGraphView <- function(df, index = NULL){
     file_no <- paste('Minimum and Maximum Temperature ', ' for ', index)
   
   g <- melt(df, id.var="doy")
+  names(g) <- c('Day', 'Variable', 'Temperature')
   
   # Output image file
   output_png <- paste0(imageDir, 'plot_', index, '.png')
   png(filename=output_png, width=10, height=8, units='in', res=400)
   
   # Plot the graph
-  print(ggplot(g, aes(doy, value)) + geom_smooth(aes(group = variable, color = variable), size = 0.45) +
+  print(ggplot(g, aes(Day, Temperature)) + geom_smooth(aes(group = Variable, color = Variable), size = 0.45) +
     geom_point(alpha = 0.5) +
     ggtitle(file_no) +
     theme( axis.line = element_line(colour = "black", 
                                     size = 0.4, linetype = "solid")) +
-    scale_x_discrete(limits=c(1:length(f$tmax))) +
+    #scale_x_discrete(limits=c(1:length(df$tmax))) +
     theme(axis.text.x = element_text(face="bold", color="black", 
                                      size=10, angle=0),
           axis.text.y = element_text(face="bold", color="black", 
