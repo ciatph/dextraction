@@ -98,7 +98,7 @@ plotGraph <- function(tmax, tmin, index = NULL){
 
 
 
-## Plots te tmax and tmin using ggplot2
+## Plots the tmax and tmin using ggplot2
 plotGraphView <- function(df, index = NULL){
   # Optional unique file index
   file_no <- 'Minimum and Maximum Temperature';
@@ -129,12 +129,49 @@ plotGraphView <- function(df, index = NULL){
 }
 
 
+## Plots precipitation ggplot2
+plotGraphPrecip <- function(df, index = NULL){
+  # Optional unique file index
+  file_no <- 'Minimum and Maximum Temperature';
+  
+  if(!is.null(index))
+    file_no <- paste('Precipitation ', ' for ', index)
+  
+  g <- melt(df, id.var="doy")
+  names(g) <- c('Day', 'Variable', 'Precipitation')
+  
+  # Output image file
+  output_png <- paste0(imageDir, 'p_', index, '.png')
+  png(filename=output_png, width=10, height=8, units='in', res=400)
+  
+  # Plot the graph
+  print(ggplot(g, aes(Day, Precipitation)) + geom_smooth(aes(group = Variable, color = Variable), size = 0.45) +
+          geom_point(alpha = 0.5) +
+          ggtitle(file_no) +
+          theme( axis.line = element_line(colour = "black", 
+                                          size = 0.4, linetype = "solid")) +
+          # scale_x_discrete(limits=c(1:length(df$p))) +
+          theme(axis.text.x = element_text(face="bold", color="black", 
+                                           size=10, angle=0),
+                axis.text.y = element_text(face="bold", color="black", 
+                                           size=10, angle=0)))
+  
+  dev.off()
+}
+
+
 
 # Plots a single-axis graph using ggplot2
 plotGraphSingle <- function(df, index = NULL){
-  ggplot(df, aes(c(1:length(tmin)), tmin)) +
+  # Output image file
+  output_png <- paste0(imageDir, 'p_', index, '.png')
+  png(filename=output_png, width=10, height=8, units='in', res=400)
+  
+  print(ggplot(df, aes(c(1:length(p)), p)) +
     geom_point() +
-    geom_point(data = f, aes(c(1:length(tmin)), colour = 'blue'))
+    geom_point(data = f, aes(c(1:length(p)), color = 'blue')))
+  
+  dev.off()
 }
 
 
@@ -173,6 +210,12 @@ wh_object <- function(){
                     doy=c(1:length(data[[index]]$tmax))));
   }
   
+  # Retrieve precipitation and doy only as data.frame
+  getdataframep <- function(index){
+    return(data.frame(p=data[[index]]$p,
+                      doy=data[[index]]$doy))
+  }
+  
   # Plot the tmax and tmin graph using plot
   plotgraph <- function(){
     for(i in 1:length(files)){
@@ -187,13 +230,22 @@ wh_object <- function(){
     }  
   }
   
+  # Plot precipitation using ggplot2
+  plotgraphprecip <- function(){
+    for(i in 1:length(files)){
+      plotGraphPrecip(getdataframep(i), files[i])
+    }  
+  }
+  
   return(list(
     load = load,
     getdatalist = getdatalist,
     getdataframe = getdataframe,
     getdataframetemp = getdataframetemp,
+    getdataframep = getdataframep,
     plotgraph = plotgraph,
-    plotgraphview = plotgraphview
+    plotgraphview = plotgraphview,
+    plotgraphprecip = plotgraphprecip
   ))
 }
 
@@ -210,6 +262,9 @@ run <- function(){
   
   # Plot the tmax and tmin graphs using ggplot2
   d$plotgraphview()
+  
+  # Plot the precipitation graph using ggplot2
+  d$plotgraphprecip()
 }
 
 ## Load the script after source()
