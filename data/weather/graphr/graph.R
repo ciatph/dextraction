@@ -152,9 +152,6 @@ wh_object <- function(){
                     doy=c(1:length(data[[index]]$tmax)));
   }
   
-  # Load data sets
-  load()
-  
   return(list(
     load = load,
     getdatalist = getdatalist,
@@ -169,7 +166,7 @@ run <- function(){
   d <- wh_object()
   
   # Load data from all files
-  # d$load()
+  d$load()
   
   # Plot the graphs from files
   # for(i in 1:length(files)){
