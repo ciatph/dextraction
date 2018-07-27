@@ -1,3 +1,6 @@
+library(ggplot2)
+library(data.table)
+
 # Working directory where thee weather files are
 projDir <- ''
 files <- c('nsch421688.014','nsch421688.015','nsch421688.016','nsch421689.014','nsch421689.016')
@@ -35,7 +38,7 @@ loadData <- function(filename, type = NULL, path=NULL){
 }
 
 
-## Plots 3 numerical values in (1) graph
+## Plots 2 numerical values in (1) graph
 ## Used for plotting temperature max and temperature min
 plotGraph <- function(tmax, tmin, index = NULL){
   # Optional unique file index
@@ -91,6 +94,30 @@ plotGraph <- function(tmax, tmin, index = NULL){
 }
 
 
+## Plots te tmax and tmin using ggplot2
+plotGraphView <- function(df, index = NULL){
+  g <- melt(df, id.var="doy")
+  
+  # Output image file
+  output_png <- paste0(index, '.png')
+  png(filename=output_png, width=10, height=8, units='in', res=400)
+  
+  # Plot the graph
+  print(ggplot(g, aes(doy, value)) + geom_smooth(aes(group = variable, color = variable), size = 0.45) +
+    geom_point(alpha = 0.5) +
+    ggtitle("Minimum and Maximum Temperature") +
+    theme( axis.line = element_line(colour = "black", 
+                                    size = 0.4, linetype = "solid")) +
+    scale_x_discrete(limits=c(1:length(f$tmax))) +
+    theme(axis.text.x = element_text(face="bold", color="black", 
+                                     size=10, angle=0),
+          axis.text.y = element_text(face="bold", color="black", 
+                                     size=10, angle=0)))
+  
+  dev.off()
+}
+
+
 ## graph analysys R object
 ## Contains accessible cached data sets
 wh_object <- function(){
@@ -118,11 +145,15 @@ wh_object <- function(){
                     doy=c(1:length(data[[index]]$tmax)));
   }
   
+  ## Retrive tmax, tmin and doy columns
   getdataframetemp <- function(index){
     f <- data.frame(tmax=data[[index]]$tmax, 
                     tmin=data[[index]]$tmin,
                     doy=c(1:length(data[[index]]$tmax)));
   }
+  
+  # Load data sets
+  load()
   
   return(list(
     load = load,
@@ -138,12 +169,16 @@ run <- function(){
   d <- wh_object()
   
   # Load data from all files
-  d$load()
+  # d$load()
   
   # Plot the graphs from files
+  # for(i in 1:length(files)){
+  #  plotGraph(d$getdatalist(i)$tmin,d$getdatalist(i)$tmax, files[i])
+  # }
+  
+  # Plot the tmax and tmin graphs using ggplot2
   for(i in 1:length(files)){
-    print(i)
-    plotGraph(d$getdatalist(i)$tmin,d$getdatalist(i)$tmax, files[i])
+    plotGraphView(d$getdataframetemp(i), paste0('plot_', files[i]))
   }  
 }
 
