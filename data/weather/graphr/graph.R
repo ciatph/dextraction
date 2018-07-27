@@ -1,9 +1,10 @@
 library(ggplot2)
 library(data.table)
 
-# Working directory where thee weather files are
-projDir <- ''
-imageDir <- paste0(projDir, 'image/')
+# Working directory where the weather files are
+projDir <- 'data_files/'
+imageDir <- paste0('image/')
+print(imageDir)
 files <- c('nsch421688.014','nsch421688.015','nsch421688.016','nsch421689.014','nsch421689.016')
 
 
@@ -122,7 +123,7 @@ plotGraphView <- function(df, index = NULL){
   
   # Plot the graph
   print(ggplot(g, aes(Day, Temperature)) + geom_smooth(aes(group = Variable, color = Variable), size = 0.45) +
-    geom_point(alpha = 0.5) +
+    # geom_point(alpha = 0.5) +
     ggtitle(file_no) +
     theme( axis.line = element_line(colour = "black", 
                                     size = 0.4, linetype = "solid")) +
@@ -148,12 +149,12 @@ plotGraphPrecip <- function(df, index = NULL){
   names(g) <- c('Day', 'Variable', 'Precipitation')
   
   # Output image file
-  output_png <- paste0(imageDir, 'p_', index, '.png')
+  output_png <- paste0(imageDir, 'precipitation_', index, '.png')
   png(filename=output_png, width=10, height=8, units='in', res=400)
   
   # Plot the graph
   print(ggplot(g, aes(Day, Precipitation)) + geom_smooth(aes(group = Variable, color = Variable), size = 0.45) +
-          geom_point(alpha = 0.5) +
+          geom_line(alpha = 0.5) +
           ggtitle(file_no) +
           theme( axis.line = element_line(colour = "black", 
                                           size = 0.4, linetype = "solid")) +

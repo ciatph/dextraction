@@ -1,31 +1,20 @@
-#/data/weather/graph_files*
+#/data/weather/graphr*
 <br>
 
 
 ## About
 
-This directory will contain modified weather data files found in the parent directory _/data/weather/_. Column headers of weather files in this directory have been modified to contain a label for each column in order:
+This directory contains the R script and files for generating PNG graphs for yje selected weather data files contained in `/data_files/`
 
-- `cellid`- Weather data cell id
-- `year`- year
-- `doy`- day of year (1..365/366)
-- `sr`- solar radiation
-- `tmin`- Minimum Temperature
-- `tmax`- Maximum Temperature
-- `vp`- Vapor Pressure
-- `ws`- Wind Speed
-- `p`- Precipitation
-
-The modified weather files in this directory will be used to plot graphs in R using the `graph.R` script.
-
- Please contact us to get access for the weather data files at **ciat.ph@gmail.com**.
+- Maximum and Minimum Temperature
+- Precipitation
 
 ## Usage
 
-1. Open R Studio and set `_/data/weather/graphr/` as the working directory.
+1. Open R Studio and set `/data/weather/graphr/` as the working directory.
 2. Type `source("graph.R")` in the R commandline.
-3. Wait for graphs to be generated.
+3. Wait for graphs to be generated inside the `image` directory.
 
 
 #### Last Updated: 
-2018/07/26
+2018/07/27
