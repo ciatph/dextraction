@@ -22,9 +22,9 @@ The modified weather files in this directory will be used to plot graphs in R us
 
 ## Usage
 
-1. Open R Studio and set `_/data/weather/graphr/` as the working directory.
+1. Open R Studio and set `/data/weather/graphr/` as the working directory.
 2. Type `source("graph.R")` in the R commandline.
-3. Wait for graphs to be generated.
+3. Wait for graphs to be generated inside the `/graphr/image/` directory.
 
 
 #### Last Updated: 
