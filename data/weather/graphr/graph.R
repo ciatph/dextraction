@@ -36,53 +36,58 @@ loadData <- function(filename, type = NULL, path=NULL){
 
 
 ## Plots 3 numerical values in (1) graph
-## Used for plotting temperature max, temperature min and precipitation
-plotGraph <- function(tmax, tmin, precip, index = NULL){
+## Used for plotting temperature max and temperature min
+plotGraph <- function(tmax, tmin, index = NULL){
   # Optional unique file index
   file_no <- '';
   
   if(!is.null(index))
     file_no <- paste0("_", index)
   
-  # Calculate range from 0 to max value of cars and trucks
-  g_range <- range(0, tmax, tmin, precip)  
-  
   print(paste0("line_chart", file_no, ".jpg"))
   
   # Give the chart file a name.
-  # png(file = paste0("line_chart", file_no, ".jpg"))
+  png(file = paste0("line_chart", file_no, ".jpg"), width=1920, height=1080)
+  
+  # Calculate range from 0 to max value of cars and trucks
+  g_range <- range(0, tmax, tmin, precip)     
   
   # Plot the charts. 
-  dev.new(width = 550, height = 330, unit = "px")
-
-  plot(tmax, type="o", col="blue", ylim=c(0,max(tmax)))
-  par(new = TRUE)
-  plot(tmin, type="o", col="red", ylim=c(0,max(precip)))
-  par(new = TRUE)
-  plot(precip, type="o", col="orange", ylim=c(0,max(precip)))
+  #dev.new(width = 550, height = 330, unit = "px")
+  # Plot tmax. Hide the default axes and annotations
+  plot(tmax, type='o', col='red', ylim=g_range, axes=FALSE, ann=FALSE)
+  
+  # Use custom labels for the x-axis (1..365/366) doy
+  axis(1, at=1:length(tmax), lab=c(1:length(tmax)))
+  
+  # Set the ticks interval for the y axis tmax
+  axis(2, las=1, at=10*0:g_range[2])  
   
   # Titles
-  title(main=paste("Tmax, Tmin and Precipitation for", index), col.main="red", font.main=4)
+  title(main=paste("Tmax, and Tmin for", index), col.main="red", font.main=4)
   
   # Label the x and y axes with dark green text
-  title(xlab="Values", col.lab=rgb(0,0.5,0))
-  title(ylab="Day of Year", col.lab=rgb(0,0.5,0))
+  title(xlab="Day of Year", col.lab=rgb(0,0.5,0))
+  title(ylab="Value", col.lab=rgb(0,0.5,0))
+  
+  par(new = TRUE)
+  
+  # Graph tmin with blue dashed line and square points
+  # lines(tmin, type="o", pch=22, lty=2, col='blue') 
+  plot(tmin, type='o', col='blue', ylim=g_range, axes=FALSE, ann=FALSE)
+  
+  # Set the ticks interval for the y axis tmax
+  axis(2, las=1, at=10*0:g_range[2])  
+  
   
   # Create a legend at (1, g_range[2]) that is slightly smaller 
   # (cex) and uses the same line colors and points used by 
   # the actual plots 
-  legend(1, g_range[2], c("Tmax","Tmin", "Precipitation"), cex=0.8, 
-         col=c("blue","red", "Orange"), pch=21:22, lty=1:2);  
-  
-  # Make x axis using Mon-Fri labels
-  axis(1, at=1:length(tmax), lab=c(1:length(tmax)))
-  
-  # Make y axis with horizontal labels that display ticks at 
-  # every 4 marks. 4*0:g_range[2] is equivalent to c(0,4,8,12).
-  axis(2, las=1, at=4*0:g_range[2])  
+  legend(1, g_range[2], c("Tmax","Tmin"), cex=0.8, 
+         col=c("blue","red"), pch=21:22, lty=1:2);  
   
   # Save the file.
-  # dev.off()
+  dev.off()
 }
 
 
@@ -106,9 +111,24 @@ wh_object <- function(){
     return (data[[index]])
   }
   
+  getdataframe <- function(index){
+    f <- data.frame(tmax=data[[index]]$tmax, 
+                    tmin=data[[index]]$tmin, 
+                    p=data[[index]]$p, 
+                    doy=c(1:length(data[[index]]$tmax)));
+  }
+  
+  getdataframetemp <- function(index){
+    f <- data.frame(tmax=data[[index]]$tmax, 
+                    tmin=data[[index]]$tmin,
+                    doy=c(1:length(data[[index]]$tmax)));
+  }
+  
   return(list(
     load = load,
-    getdatalist = getdatalist
+    getdatalist = getdatalist,
+    getdataframe = getdataframe,
+    getdataframetemp = getdataframetemp
   ))
 }
 
@@ -123,7 +143,7 @@ run <- function(){
   # Plot the graphs from files
   for(i in 1:length(files)){
     print(i)
-    plotGraph(d$getdatalist(i)$tmin,d$getdatalist(i)$tmax,d$getdatalist(i)$p, files[i])
+    plotGraph(d$getdatalist(i)$tmin,d$getdatalist(i)$tmax, files[i])
   }  
 }
 
