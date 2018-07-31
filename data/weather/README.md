@@ -38,7 +38,7 @@ Column data or variables found inside the weather files.
 Each weather data file contains a miscellaneous header (which should be ignored when reading), and rows of data. Each row correspond to a day in a year.
 <br><br>
 
-### Data Dictionary of Fields to be Generated and Exported
+### Data Dictionary of Weather Fields to be Generated and Exported
 
 1. **Cell ID** - Cell id in the grid
 2. **Tmax** - Maximum Temperature (T)
