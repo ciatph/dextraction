@@ -43,7 +43,7 @@ loadData <- function(filename, type = NULL, path=NULL){
 
 ## Plots 2 numerical values in (1) graph
 ## Used for plotting temperature max and temperature min
-## Creates low-resolution graphics
+## Creates low-resolution graphics (uses the standard plot method)
 plotGraph <- function(tmax, tmin, precip, index = NULL){
   # Optional unique file index
   file_no <- '';
@@ -137,10 +137,10 @@ plotGraphView <- function(df, index = NULL){
 }
 
 
-## Plots precipitation ggplot2
+## Plots precipitation using ggplot2
 plotGraphPrecip <- function(df, index = NULL){
   # Optional unique file index
-  file_no <- 'Minimum and Maximum Temperature';
+  file_no <- 'Precipitation';
   
   if(!is.null(index))
     file_no <- paste('Precipitation ', ' for ', index)
@@ -154,7 +154,7 @@ plotGraphPrecip <- function(df, index = NULL){
   
   # Plot the graph
   print(ggplot(g, aes(Day, Precipitation)) + geom_smooth(aes(group = Variable, color = Variable), size = 0.45) +
-          geom_line(alpha = 0.5) +
+          geom_point(alpha = 0.5) +
           ggtitle(file_no) +
           theme( axis.line = element_line(colour = "black", 
                                           size = 0.4, linetype = "solid")) +
@@ -163,6 +163,45 @@ plotGraphPrecip <- function(df, index = NULL){
                                            size=10, angle=0),
                 axis.text.y = element_text(face="bold", color="black", 
                                            size=10, angle=0)))
+  
+  dev.off()
+}
+
+
+## Plots a simple graph using ggplot2
+## @param df: data frame containing data and variables
+## @param type: type of graph to render: point|bar
+## @param index: optional filename for output image file
+plotGraphSimple <- function(df, type, index = NULL){
+  # Optional unique file index
+  file_no <- 'Precipitation Graph';
+  
+  # Get the bar type
+  graph_type <- 'point' #default
+  
+  if(!is.null(type))
+    graph_type <- type
+  
+  if(is.null(index))
+    index <- 'demo'
+  
+  if(!is.null(index))
+    file_no <- paste('Precipitation ', ' for ', index)
+    
+  # Output image file
+  output_png <- paste0(imageDir, 'precipitation_', index, '.png')
+  png(filename=output_png, width=10, height=8, units='in', res=400)
+  
+  # Get the bar type
+  if(graph_type == 'point')
+    graph <- geom_point(stat="identity")
+  else if(graph_type == 'bar')
+    graph <- geom_bar(stat="identity")
+  
+  names(df) <- c('Precipitation','Day')
+  print(ggplot(data=df, aes(x=Day, y=Precipitation)) +
+    ggtitle(file_no) +
+    graph)  
   
   dev.off()
 }
@@ -185,6 +224,7 @@ plotGraphSingle <- function(df, index = NULL){
 
 ## graph analysys R object
 ## Contains accessible cached data sets
+## Contains shorthand method calls for plotting graphs
 wh_object <- function(){
   data <- list();
   
@@ -239,10 +279,15 @@ wh_object <- function(){
   }
   
   # Plot precipitation using ggplot2
-  plotgraphprecip <- function(){
+  plotgraphprecip <- function(type = NULL){
+    graph_type <- 'point'
+    
+    if(!is.null(type))
+      graph_type <- type
+    
     for(i in 1:length(files)){
-      plotGraphPrecip(getdataframep(i), files[i])
-    }  
+      plotGraphSimple(getdataframep(i), graph_type, files[i])
+    } 
   }
   
   return(list(
@@ -273,7 +318,7 @@ run <- function(){
   d$plotgraphview()
   
   # Plot the precipitation graph using ggplot2
-  d$plotgraphprecip()
+  d$plotgraphprecip('bar')
 }
 
 ## Load the script after source()
