@@ -1,17 +1,17 @@
-#/data/weather/*
+# /data/weather/*
 
 This directory will contain weather data files in which weather data for a year and month will be extracted. Please contact us for the weather data files at **ciat.ph@gmail.com**.
 
-##Filename 
+## Filename 
 Weather files start with _"nsch"_ followed by a 6-digit number representing the cell id. The last 3-digits starting after the dot "." represents the year for which the data was taken.
 
-###Breakdown (example)
+### Breakdown (example)
 - `nsch418807.014` is the full weather file name.
  - `nsch` - string prefix
  - `417368` - Cell ID
  - `.014` - year
 
-###Sample Filenames
+### Sample Filenames
 `nsch417368.002`
 `nsch417368`
 `...`
@@ -34,7 +34,7 @@ Column data or variables found inside the weather files.
 7. **Wind Speed (WS)** - m/s
 8. **Precipitation (P)** - mm/d
 
-##File Content
+## File Content
 Each weather data file contains a miscellaneous header (which should be ignored when reading), and rows of data. Each row correspond to a day in a year.
 <br><br>
 
@@ -62,4 +62,4 @@ Each weather data file contains a miscellaneous header (which should be ignored 
 
 
 #### Last Updated: 
-2018/07/13
+2018/07/31
