@@ -384,18 +384,19 @@ Dextraction.prototype.mergeCleanData = function(){
                         record[id]['_11growthstg_clean'] = this.AVG_GROWTH_STG_MAP_VALUE; // default value: 7
                         record[id]['w_growthstg_date'] = '';
 
-                        // Get and process the _11growthstg if not empty
+                        // Get and process the _11growthstg if not empty (no. of months after P&D was observed)
                         if(record[id]['_11growthstg'] !== ''){                         
-                            // Check for a range of values separated by ","
+                            // Check for a range of values separated by ",". Get only the 1st value
                             record[id]['_11growthstg_clean'] = (record[id]['_11growthstg'].indexOf(',') >= 0) ? 
                                 record[id]['_11growthstg'].split(',')[0] : record[id]['_11growthstg'];           
                                 
-                            // 3. Clean strings if contains "harvest"
+                            // 3. Clean strings if contains "harvest" (disease was observed during the harvest period)
                             if(record[id]['_11growthstg_clean'].indexOf("harvest") >= 0)
                                 record[id]['_11growthstg_clean'] = utils.getmonth(record[id]['_08hvdate']);
                         }
 
-                        // 4. Find the P&D  growth stage date (date after P&D was observed)
+                        // 4. Find the P&D growth stage date (date after P&D was observed)
+                        // Add the number of months (after P&D was observed: _11growthstg_clean) to the planting date (_07pdate)
                         if(record[id]['_07pdate'] !== ''){
                             record[id]['w_growthstg_date'] = utils.addmonths(record[id]['_07pdate'], record[id]['_11growthstg_clean'], 'string');
                             record[id]['_yr_obs'] = utils.getmonth(record[id]['w_growthstg_date'], '-', 'year').toString(); 
@@ -609,9 +610,14 @@ Dextraction.prototype.appendWeatherData = function(){
     for(var i=0; i<this.data_processed.length; i++){
         var record = this.data_processed[i];
 
-        // Get date parameters
+        // Get date parameters for the date when P&D was observed (w_growthstg_date)
+        // day of year conversion
         var doy = utils.getdoy(record.w_growthstg_date);// harvest date: utils.getdoy(record._08hvdate);
+
+        // month
         var month = utils.getmonth(record.w_growthstg_date,'-','month');
+
+        // number of days in the (w_growthstg_date) month
         var days = utils.getdaysinmonth(record.w_growthstg_date);
 
         console.log('doy: ' + doy + ', wh_date: ' + record.w_growthstg_date + ', pdate: ' + record._07pdate + ', growthstg: ' + record._11growthstg_clean + 
@@ -633,6 +639,8 @@ Dextraction.prototype.appendWeatherData = function(){
         
         denom = 0;
         
+        // Add/compute/process IRRI weather data variables according to the (w_growthstg_date) date properties
+        // Start counting from the DOY. Count until the no. of days of the month, starting from the DOY.
         for(var j=doy; j<(doy+days)-1; j++){
             // Append Tempetature Max
             var cell = this.data_processed[i].cell_id;
