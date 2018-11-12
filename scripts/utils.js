@@ -15,6 +15,9 @@ var Utils = function(){
  * @param {*} str 
  */
 Utils.prototype.cleanField = function(str){
+    if(str === undefined || str === null)
+        return str;
+
     str = str.toString();
     try{
         str = str.replace(/\t/g, '');
