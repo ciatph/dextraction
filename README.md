@@ -16,18 +16,20 @@ NodeJS must have been installed in your system. Used version as of this writing 
 
 Weather data files must be present in the `data/weather/` directory. Please contact us to obtain the weather data files at **ciat.ph@gmail.com**.
 
-## Installation/Usage
-1. Go into the project directory from the commandline.
-2. Run npm install.
-3. Start debugging using VS Code, or run `node index.js` from the command line.
-
-## Dependency Libraries
+### Dependency Libraries
 These are node modules that are used in this project.
 
 - **cors** v.2.8.4
 - **json2csv** v.4.1.6
 - **path** v.0.12.7
 - **request** - v.2.87.0
+
+## Installation/Usage
+1. Clone this repository to your local PC, or download as a `.zip` file.
+2. Go into the project directory from the commandline.
+3. Run npm install.
+4. Start debugging using VS Code, or run `node index.js` from the command line.
+5. 
 
 #### Last Updated
 
