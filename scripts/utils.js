@@ -55,6 +55,54 @@ Utils.prototype.getObjectKeys = function(obj){
     return keys;
 };
 
+/**
+ * Returns the shorthand YYYY/mm/dd [String] format of a toUTCString()
+ * @param { [String] Date() toUTCString format } date 
+ */
+Utils.prototype.getdatestring = function(date){    
+    var convert = new Date(date);
+    return convert.toLocaleDateString();
+};
+
+
+/**
+ * Returns the start and (final) end week date range from a given end date.
+ * The (final) end date is rounded to the LAST DAY of the week on which @paramDate falls into
+ * The start date is the 1st day of the week on which @paramDate falls into
+ * @param { [String] date representing the end of a date range. Format: YYYY/mm/dd or (Year month, date) } paramDate 
+ * @return JS Object with (computed) first and last date in [String] Date() Format
+ * {
+ *      @first: [Integer] first day of week (Sunday)
+ *      @last: [Integer] last day of week
+ *      @start_date: [String] version of JS Date() toUTCString version of (computed) starting date
+ *      @end_date: [String] version of JS Date() toUTCString version of the last day of the week (Saturday)
+ * }
+ */
+Utils.prototype.getweekrange = function(paramDate){
+    console.log('--computing monthrange from ' + paramDate);
+
+    var root = new Date(paramDate);
+    var first = root.getDate() - root.getDay();// + 1;
+    var last = first + 6;
+
+    console.log('first: ' + first + ', last: ' + last);
+    
+    var startdate = new Date(root.setDate(first));
+    var end = new Date(root.setDate(last));
+
+    //Adjust end's month, if days has backtracked to last month    
+    if(first < 0){
+        end.setMonth(end.getMonth() + 1);
+    }
+
+    return {
+        first: first,
+        last: last,
+        start_date: this.getdatestring(startdate.toUTCString()),
+        end_date: this.getdatestring(end.toUTCString()) 
+    };
+};
+
 
 /**
  * Extract a requested parameter from a full date
@@ -251,6 +299,20 @@ Utils.prototype.getdoy = function(date){
     return sum + 1;
 };
 
+
+/**
+ * Get the numerical index (day of year) of a Date() format in a year
+ * @param date [String] Date format "YYYY-mm-dd" or "YYYY/mm/dd"
+ * Returns 1-365, null if invalid value
+ */
+Utils.prototype.getdoynumber = function(date){
+    var curr = new Date(date);
+    var start = new Date(curr.getFullYear(), 0, 0);
+    var difference = (curr - start) + ((start.getTimezoneOffset() - curr.getTimezoneOffset()) * 60 * 1000);
+    var oneDay = 1000 * 60 * 60 * 24;
+    var doy = Math.floor(difference / oneDay);
+    return isNaN(doy) ? null : doy;
+};
 
 
 /**
