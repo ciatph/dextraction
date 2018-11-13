@@ -6,7 +6,7 @@ Automated data processing for collected mobile and weather data.
 
 **Version 2.0.0** was originally used for the 1st batch of data extraction last July 2018, with a few modifications on the output columns. (Original) Output data sets for this version is available at [link](https://trello.com/c/9jHUFKpV). _(private trello board)_
 
-- [NEW]: draws the comparison of Isabela and IRRI's weather data using R's `base` plotting graphics.
+- **[NEW]**: draws the comparison of Isabela and IRRI's weather data using R's `base` plotting graphics.
 - updates the firebase GPS records by matching ISU's updated GPS locations with farmer names file to their counterparts synced to firebase.
 - extracts and appends IRRI weather data on the full month where P&D was observed to the original cassava data
 
@@ -17,7 +17,7 @@ NodeJS must have been installed in your system. Used version as of this writing 
 Weather data files must be present in the `data/weather/` directory. Please contact us to obtain the weather data files at **ciat.ph@gmail.com**.
 
 ### Dependency Libraries
-These are node modules that are used in this project.
+These are node modules used for the project, automatically installed during `npm install`.
 
 - **cors** v.2.8.4
 - **json2csv** v.4.1.6
