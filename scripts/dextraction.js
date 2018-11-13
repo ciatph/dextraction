@@ -604,8 +604,145 @@ Dextraction.prototype.mergeCleanData = function(){
 
 /**
  * Reads and appends IRRI weather data files based on each record's "w_growthstg_date" 
+ * (Date where P&D was observed) parameter. (N) months of weather data are processed, 
+ * starting on the DOY of the LAST day of the week, down to the first day (DOY - N)
+ * @param { [Integer] number of days to read IRRI weather files from.} numDays
+ * @param { @numdays values: 30 = 1 month, 60 = 2 months } 
+ */
+Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
+    var denom = 0;
+    var unique_pesticide = [];
+
+    // Append weather variables into each record
+    for(var i=0; i<this.data_processed.length; i++){
+        // Fetch the current record row
+        var record = this.data_processed[i];
+        var dates = 0;    
+
+        // Get date parameters for the date when P&D was observed (w_growthstg_date)
+        // Get the date of the week's ending day where P&D was observed
+        var weekrange = utils.getweekrange(record.w_growthstg_date);
+        
+        // Compute the starting date for processing weather data: 
+        // weeks' end date minus (N) number of days (30, 60)
+        var start = new Date(weekrange.end_date);
+        start.setDate(start.getDate() - numDays);
+
+        // Initialize weather variables
+        var tmax = 0;
+        var tmin = 1000;
+        var tavg = 0;
+        var ftmax31 = 0;
+        var paccum = 0;
+        var vp = 0;
+        var sr = 0;
+
+        var total_tmin = 0;
+        var total_tmax = 0;
+        var zero = 0;
+        var max_p_zero = 0;
+        
+        denom = 0;            
+
+        for(var doy=start; doy<new Date(weekrange.end_date); doy.setDate(doy.getDate() + 1)){
+            dates++;
+
+            // Get the DOY conversion of the current date from the date range
+            var j = utils.getdoynumber(new Date(doy).toLocaleDateString());
+            console.log('curr date: ' + new Date(doy).toLocaleDateString() + ', DOY: ' + j);
+
+            // Append Tempetature Max
+            var cell = this.data_processed[i].cell_id;
+            denom++;
+
+            if(this.ref_weather[cell] !== undefined){
+                if(Object.keys(this.ref_weather[cell]).length > 0){
+                    // Temperature max
+                    if(this.ref_weather[cell][j].tmax > tmax)
+                        tmax = parseFloat(this.ref_weather[cell][j].tmax);
+
+                    // Temperature min
+                    if(this.ref_weather[cell][j].tmin < tmin)
+                        tmin = parseFloat(this.ref_weather[cell][j].tmin);  
+
+                    // Average temperatures
+                    total_tmax += parseFloat(this.ref_weather[cell][j].tmax);
+                    total_tmin += parseFloat(this.ref_weather[cell][j].tmin);
+
+                    // Frequency of days with Tmax >= 31 degrees Celsius
+                    if(this.ref_weather[cell][j].tmax >= 31)
+                        ftmax31++;
+
+                    // Precipitation accumulated
+                    paccum += parseFloat(this.ref_weather[cell][j].p);    
+
+                    // Vapor Pressure
+                    vp += parseFloat(this.ref_weather[cell][j].vp);
+
+                    // Solar radiattion
+                    sr += parseFloat(this.ref_weather[cell][j].sr);
+                    
+                    // Precipitation Dry Day; max from the number of consecutive dry days (P=0)
+                    if(parseInt(this.ref_weather[cell][j].p) === 0){
+                        zero++;
+                    }
+                    else{
+                        if(zero !== 0){
+                            if(zero > max_p_zero)
+                                max_p_zero = zero;
+                            zero = 0;
+                        }
+                    }
+                }  
+            }    
+            else{
+                console.log('WARNING cellid ' + cell + ' is undefined!');
+            }                
+        }
+        
+        this.data_processed[i]['w_tmax'] = parseFloat(tmax);
+        this.data_processed[i]['w_tmmin'] = parseFloat(tmin);
+        this.data_processed[i]['w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
+        this.data_processed[i]['w_drange'] = (total_tmax/denom) / (total_tmin/denom);
+        this.data_processed[i]['w_ftmax31'] = ftmax31;
+        this.data_processed[i]['w_paccum'] = paccum;
+        this.data_processed[i]['w_pdryday'] = max_p_zero;
+        this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
+        this.data_processed[i]['w_solar'] = sr;
+
+        // Clean undefined _14psticide_type_* cells
+        for(var j=0; j<this.ref_pesticide.length; j++){
+            // Process undefined pesticides
+            if(this.data_processed[i][this.ref_pesticide[j]] === undefined){
+                this.data_processed[i][this.ref_pesticide[j]] = 0;
+            }
+
+            // Process undefined _12freq pesticide frequency
+            var freq = this.ref_pesticide[j].substring(this.ref_pesticide[j].indexOf('type') + 4, this.ref_pesticide[j].length);
+            console.log('freq check: ' + freq);
+            if(this.data_processed[i]['_12freq' + freq] === undefined){
+                this.data_processed[i]['_12freq' + freq] = 0;
+            }         
+             
+        }         
+
+        /*
+        console.log('ALL-DATES: ' + dates);
+        console.log('week-start: ' + weekrange.start_date + '\nweek-end: ' + weekrange.end_date + '\n' +
+            'start (minused): ' + start.toLocaleDateString() + ', end: ' + end_date);
+        */
+    }   
+    
+    
+    // Write to files
+    this.writeFiles();    
+};
+
+
+/**
+ * Reads and appends IRRI weather data files based on each record's "w_growthstg_date" 
  * (Date where P&D was observed) parameter. (1) month of weather data are processed, 
- * starting on the DOY of the 1st day of the month, up to the last day
+ * starting on the DOY of the 1st day of the month, up to the month's last day DOY
  */
 Dextraction.prototype.appendWeatherData = function(){
     var denom = 0;
@@ -783,7 +920,8 @@ Dextraction.prototype.readWeatherFiles = function(){
                         firstline = false;
 
                         if(count === wh.length && day >= max){
-                            self.appendWeatherData();   
+                            //self.appendWeatherData();   
+                            self.appendWeatherDataBacktrack(30); 
                         }
                     });
                 }
@@ -817,7 +955,7 @@ Dextraction.prototype.writeFiles = function(){
             console.log('error in writing data');
         }
         else{
-            console.log('data was saved!');
+            console.log('JSON data was saved!');
         }
     });
     
@@ -835,7 +973,7 @@ Dextraction.prototype.writeFiles = function(){
                 console.log('error in writing data');
             }
             else{
-                console.log('data was saved!');
+                console.log('CSV data was saved!');
             }
         });       
    }
