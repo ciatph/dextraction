@@ -1,6 +1,12 @@
 # dextraction
 Automated data processing for collected mobile and weather data.
 
+## Version
+
+**Version 2.0.0** was carried on from the original, unmodified *version_1.0.0* used for the 1st batch of data extraction last July 2018. (Original) Output data sets for this version is available at [link](https://trello.com/c/9jHUFKpV). _(private trello board)_
+
+Version 2.0.0 draws the comparison of Isabela and IRRI's weather data using R's `base` plotting graphics.
+
 ## Prerequisites
 NodeJS must have been installed in your system. Used version as of this writing is Node = v9.2.0, Npm = 5.5.1.
 
