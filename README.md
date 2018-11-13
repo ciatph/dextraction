@@ -3,6 +3,10 @@ An automated data processing tool for extracting and cleaning collected mobile a
 
 Creates an output of farming practices variables joined with corresponding weather data based on planting date plus number of months after pest & disease has been observed.
 
+## Version
+
+**Version 1.0.0** was originally used for the 1st batch of data extraction last July 2018, with a few modifications on the output columns. (Original) Output data sets for this version is available at [link](https://trello.com/c/9jHUFKpV). _(private trello board)_
+
 ## Prerequisites
 NodeJS must have been installed in your system. Used version as of this writing is Node = v9.2.0, Npm = 5.5.1.
 
@@ -21,5 +25,8 @@ These are node modules that are used in this project.
 - **path** v.0.12.7
 - **request** - v.2.87.0
 
-#### Last Updated: 
-2018/07/31
+#### Last Updated
+
+@ciatph <br>
+**Date created:** 2018/07/31 <br>
+**Date modified:** 2018/11/13
