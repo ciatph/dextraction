@@ -212,7 +212,7 @@ Utils.prototype.getdaysinmonth = function(date){
 
 
 /**
- * Get the numerical starting index of a month in a year
+ * Get the numerical starting index  (day of year) of a month in a year
  * @param month numerical 1-12 month
  * Returns 1-365
  */
@@ -249,6 +249,17 @@ Utils.prototype.getdoy = function(date){
         }
     }
     return sum + 1;
+};
+
+
+
+/**
+ * Get the date of start and end month range, with the end computed to be the last date of the week
+ * @param { Given date, to be the basis for the week's end date } dateEnd 
+ * @param { Number of months to backtract } numberMonths 
+ */
+Utils.prototype.getmonthrange = function(dateEnd, numberMonths){
+    
 };
 
 
