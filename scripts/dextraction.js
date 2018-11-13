@@ -605,9 +605,10 @@ Dextraction.prototype.mergeCleanData = function(){
 /**
  * Reads and appends IRRI weather data files based on each record's "w_growthstg_date" 
  * (Date where P&D was observed) parameter. (N) months of weather data are processed, 
- * starting on the DOY of the LAST day of the week, down to the first day (DOY - N)
+ * starting on the DOY of the LAST day of the week where P&D was detected, 
+ * DOWN TO the computed first day (DOY - N)
  * @param { [Integer] number of days to read IRRI weather files from.} numDays
- * @param { @numdays values: 30 = 1 month, 60 = 2 months } 
+ * @param { @numdays values: Any Integer (i.e., 30 = 1 month, 60 = 2 months) } 
  */
 Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
     var denom = 0;
@@ -700,17 +701,18 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
             }                
         }
         
-        this.data_processed[i]['w_tmax'] = parseFloat(tmax);
-        this.data_processed[i]['w_tmmin'] = parseFloat(tmin);
-        this.data_processed[i]['w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
-        this.data_processed[i]['w_drange'] = (total_tmax/denom) / (total_tmin/denom);
-        this.data_processed[i]['w_ftmax31'] = ftmax31;
-        this.data_processed[i]['w_paccum'] = paccum;
-        this.data_processed[i]['w_pdryday'] = max_p_zero;
-        this.data_processed[i]['w_vpavg'] = parseFloat(vp/denom);
-        this.data_processed[i]['w_solar'] = sr;
+        this.data_processed[i]['w_tmax_' + numDays] = parseFloat(tmax);
+        this.data_processed[i]['w_tmmin_' + numDays] = parseFloat(tmin);
+        this.data_processed[i]['w_tavg_' + numDays] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
+        this.data_processed[i]['w_drange_' + numDays] = (total_tmax/denom) / (total_tmin/denom);
+        this.data_processed[i]['w_ftmax31_' + numDays] = ftmax31;
+        this.data_processed[i]['w_paccum_' + numDays] = paccum;
+        this.data_processed[i]['w_pdryday_' + numDays] = max_p_zero;
+        this.data_processed[i]['w_vpavg_' + numDays] = parseFloat(vp/denom);
+        this.data_processed[i]['w_solar_' + numDays] = sr;
 
         // Clean undefined _14psticide_type_* cells
+        /*
         for(var j=0; j<this.ref_pesticide.length; j++){
             // Process undefined pesticides
             if(this.data_processed[i][this.ref_pesticide[j]] === undefined){
@@ -722,9 +724,9 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
             console.log('freq check: ' + freq);
             if(this.data_processed[i]['_12freq' + freq] === undefined){
                 this.data_processed[i]['_12freq' + freq] = 0;
-            }         
-             
+            }            
         }         
+        */
 
         /*
         console.log('ALL-DATES: ' + dates);
@@ -735,14 +737,14 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
     
     
     // Write to files
-    this.writeFiles();    
+    // this.writeFiles();    
 };
 
 
 /**
  * Reads and appends IRRI weather data files based on each record's "w_growthstg_date" 
  * (Date where P&D was observed) parameter. (1) month of weather data are processed, 
- * starting on the DOY of the 1st day of the month, up to the month's last day DOY
+ * starting on the DOY of the FIRST day of the month, up to the month's last day DOY
  */
 Dextraction.prototype.appendWeatherData = function(){
     var denom = 0;
@@ -860,7 +862,12 @@ Dextraction.prototype.appendWeatherData = function(){
         }        
     }
 
-    // Write to files
+    // Get the weather data (N) days from the last day of the week where 
+    // P&D's occurence was detected "w_growthstg_date"
+    this.appendWeatherDataBacktrack(30); 
+    this.appendWeatherDataBacktrack(60); 
+
+    // Write processed data to files
     this.writeFiles();
 };
 
@@ -920,8 +927,7 @@ Dextraction.prototype.readWeatherFiles = function(){
                         firstline = false;
 
                         if(count === wh.length && day >= max){
-                            //self.appendWeatherData();   
-                            self.appendWeatherDataBacktrack(30); 
+                            self.appendWeatherData();   
                         }
                     });
                 }
