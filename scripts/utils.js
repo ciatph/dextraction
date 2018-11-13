@@ -213,7 +213,7 @@ Utils.prototype.getdaysinmonth = function(date){
 
 /**
  * Get the numerical starting index  (day of year) of a month in a year
- * @param month numerical 1-12 month
+ * @param date [String] Date formate YYYY/mm/dd
  * Returns 1-365
  */
 Utils.prototype.getdoy = function(date){
