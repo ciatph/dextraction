@@ -27,8 +27,8 @@ These are node modules that are used in this project.
 
 ## Installation/Usage
 1. Clone this repository to your local PC, or download as a `.zip` file.
-2. Go into the project directory from the commandline.
-3. Run npm install.
+2. Go into the project directory from the command line.
+3. Run `npm install`.
 4. Start debugging using VS Code, or run `node index.js` from the command line.
 
 
