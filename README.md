@@ -7,6 +7,8 @@ Creates an output of farming practices variables joined with corresponding weath
 
 **Version 1.0.0** was originally used for the 1st batch of data extraction last July 2018, with a few modifications on the output columns. (Original) Output data sets for this version is available at [link](https://trello.com/c/9jHUFKpV). _(private trello board)_
 
+Version 1.0.0 draws the comparison of Isabela and IRRI's weather data using R's `gplot2` package.
+
 ## Prerequisites
 NodeJS must have been installed in your system. Used version as of this writing is Node = v9.2.0, Npm = 5.5.1.
 
