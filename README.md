@@ -1,5 +1,7 @@
 # dextraction
-Automated data processing for collected mobile and weather data.
+An automated data processing tool for extracting and cleaning collected mobile and weather data.
+
+Creates an output of farming practices variables joined with corresponding weather data based on planting date plus number of months after pest & disease has been observed.
 
 
 ### Version Updates
