@@ -602,6 +602,11 @@ Dextraction.prototype.mergeCleanData = function(){
 };
 
 
+/**
+ * Reads and appends IRRI weather data files based on each record's "w_growthstg_date" 
+ * (Date where P&D was observed) parameter. (1) month of weather data are processed, 
+ * starting on the DOY of the 1st day of the month, up to the last day
+ */
 Dextraction.prototype.appendWeatherData = function(){
     var denom = 0;
     var unique_pesticide = [];
