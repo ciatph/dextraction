@@ -20,6 +20,7 @@ var Dextraction = function(){
     // final data to be analyzed with weather data
     this.data_processed = [];
 
+    // IRRI weather data container
     this.ref_weather = {};
 
     // array of firebase keys for a farmer record
@@ -34,7 +35,7 @@ var Dextraction = function(){
 
 
 /**
- * Get all unique farmer names from the subplot level from online-loaded data
+ * Get all unique farmer names from the subplot level from the firebase online-loaded data
  * Gets only the first and last name
  * Returns an Object of format:
  * - count: no. of unique names
@@ -114,7 +115,7 @@ Dextraction.prototype.loadFarmland = function(url){
                 }
             }
 
-            // count data
+            // Clean and merge final online firebase data with ISU's updated GPS+farmer names data
             self.mergeCleanData();
         }
         else{
@@ -132,7 +133,7 @@ Dextraction.prototype.loadFarmland = function(url){
  * Format:
  * - farmer_info: Firebase REST url for farmer names
  * - famrland_setup: Firebase REST url for farmland information
- * - gps: Url for updated GPS points matched to farmer names
+ * - gps: Url for ISU-updated GPS points matched to farmer names (local .json file)
  */
 Dextraction.prototype.loadData = function(urlObj){
     var self = this;
@@ -151,13 +152,13 @@ Dextraction.prototype.loadData = function(urlObj){
         }
     }
     
-    // Online firebase url of all farmer information
+    // Load the online firebase url of all farmer information
     request(urlObj.farmer_info, function(error, response, body){
         if(!error && response.statusCode == 200){
             self.data_farmerinfo = JSON.parse(body).data;
             console.log('loaded farmer information!');
 
-            // Load the farmland data
+            // Load the online farmland data. Proceed to the merge data process after this has finished
             self.loadFarmland(urlObj.farmland_setup);
         }
         else{
@@ -166,7 +167,7 @@ Dextraction.prototype.loadData = function(urlObj){
     });
 
 
-    // Load local ISU-updated data
+    // Load local (file) ISU-updated GPS and farmer names data
     var localUrl = urlObj.gps;
     fs.readFile(localUrl, 'utf8', function(err, data){
         if(err){
@@ -330,6 +331,8 @@ Dextraction.prototype.getCellId = function(coords){
 Dextraction.prototype.mergeCleanData = function(){
     var count_match = 0;
     var count_missed = 0;
+
+    // Get online firebase farmer names (lowercase firstname + lastname)
     var farmerlist = this.getAllFarmers();
     var missed = [];
 
@@ -353,6 +356,7 @@ Dextraction.prototype.mergeCleanData = function(){
         // Add a new field, matches
         this.data_gps[i]['match'] = 'false';
 
+        // Combine ISU farmer's first name + last name. Clean of unneccessary items (numbers, etc) 
         var new_name = utils.normalizeNames(this.data_gps[i].name);
 
         // New farmer name (with updated gps from ISU's updated records) matches a name record from the existing data
@@ -364,6 +368,8 @@ Dextraction.prototype.mergeCleanData = function(){
             // Get the farmer ID of the existing new farmer name
             var farmerId = this.nameExists(new_name.name);
             
+            // ISU's farmer name matches with original farmer record in firebase.
+            // Proceed to cleaning, merging and processing
             if(farmerId !== null){
                 // Farmer plot(s)
                 var record = this.getFarmerRecordPlot(farmerId, new_name.plot);
@@ -417,7 +423,7 @@ Dextraction.prototype.mergeCleanData = function(){
                             }
                         }
 
-                        // Initialize empty objects for ref_weather
+                        // Initialize empty objects for ref_weather, indexed at weather file name (i.e, nsch421688.014)
                         if(unique_cellid.indexOf(cell) === -1 && record[id]['_yr_obs'] !== undefined){
                             unique_cellid.push(cell);
                             console.log('cell: ' + cell);
@@ -596,7 +602,7 @@ Dextraction.prototype.mergeCleanData = function(){
     
 
 
-    // Reondad associated weather files
+    // Read into memory al associated weather files
     this.readWeatherFiles();
     console.log('matched: ' + count_match + '\nmissed: ' + count_missed + '\nunique_gps: ' + count_gps_all + '\nall-data count: ' +Object.keys(this.data_processed).length);    
 };
@@ -873,7 +879,7 @@ Dextraction.prototype.appendWeatherData = function(){
 
 
 /**`
- * Reads  the weather files into JSON format into ref_weather
+ * Reads all associated IRRI weather files into JSON format into ref_weather
  */
 Dextraction.prototype.readWeatherFiles = function(){
     var dirname = 'data/weather';
@@ -927,6 +933,7 @@ Dextraction.prototype.readWeatherFiles = function(){
                         firstline = false;
 
                         if(count === wh.length && day >= max){
+                            // Append weather data to the final cleaned and merged firebase + ISU data sets
                             self.appendWeatherData();   
                         }
                     });
