@@ -4,7 +4,7 @@
 
 ## About
 
-This directory contains the R script and files for generating PNG graphs for yje selected weather data files contained in `/data_files/`
+This directory contains the R script and files for generating PNG graphs for the selected weather data files contained in `/data_files/`
 
 - Maximum and Minimum Temperature
 - Precipitation
