@@ -707,15 +707,15 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
             }                
         }
         
-        this.data_processed[i]['w_tmax_' + numDays] = parseFloat(tmax);
-        this.data_processed[i]['w_tmmin_' + numDays] = parseFloat(tmin);
-        this.data_processed[i]['w_tavg_' + numDays] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
-        this.data_processed[i]['w_drange_' + numDays] = (total_tmax/denom) / (total_tmin/denom);
-        this.data_processed[i]['w_ftmax31_' + numDays] = ftmax31;
-        this.data_processed[i]['w_paccum_' + numDays] = paccum;
-        this.data_processed[i]['w_pdryday_' + numDays] = max_p_zero;
-        this.data_processed[i]['w_vpavg_' + numDays] = parseFloat(vp/denom);
-        this.data_processed[i]['w_solar_' + numDays] = sr;
+        this.data_processed[i][numDays + 'w_tmax_'] = parseFloat(tmax);
+        this.data_processed[i][numDays + 'w_tmmin_'] = parseFloat(tmin);
+        this.data_processed[i][numDays + 'w_tavg_'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
+        this.data_processed[i][numDays + 'w_drange_'] = (total_tmax/denom) / (total_tmin/denom);
+        this.data_processed[i][numDays + 'w_ftmax31_'] = ftmax31;
+        this.data_processed[i][numDays + 'w_paccum_'] = paccum;
+        this.data_processed[i][numDays + 'w_pdryday_'] = max_p_zero;
+        this.data_processed[i][numDays + 'w_vpavg_'] = parseFloat(vp/denom);
+        this.data_processed[i][numDays + 'w_solar_'] = sr;
 
         // Clean undefined _14psticide_type_* cells
         /*
