@@ -31,12 +31,21 @@ These are node modules that are used in this project.
 ## Installation/Usage
 1. Clone this repository to your local PC, or download as a `.zip` file.
 2. Go into the project directory from the command line.
-3. Run npm install.
+3. Run `npm install`.
 4. Start debugging using VS Code, or run `node index.js` from the command line.
+
+
+## Web Tools
+
+Web tools for 1) finding IRRI's weather data `cell id` using longitude and latitude, and 2) viewing graphs comparing cassava weather data (version 2.0's 30 and 60 days IRRI weather data) are available in `/webtools`.
+
+1. Navigate using the command line to `/webtools`.
+2. Run `npm install`.
+3. Run `gulp dev`. 
 
 
 #### Last Updated: 
 
 @ciatph <br>
 **Date created:** 2018/07/31 <br>
-**Date modified:** 2018/11/13
+**Date modified:** 2018/11/20
