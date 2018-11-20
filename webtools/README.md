@@ -8,7 +8,7 @@ NodeJS must have been installed in your system. Used version as of this writing 
 
 
 ## Installation/Usage
-1. Clone the `dextractiom` repository to your local PC, or download as a `.zip` file.
+1. Clone the `dextraction` repository to your local PC, or download as a `.zip` file.
 2. Go into the project directory from the command line.
 3. Run `npm install`.
 4. Go into the `/webtools` project directory and run `http-server`.
