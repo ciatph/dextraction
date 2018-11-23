@@ -38,6 +38,9 @@ var CsvMerge = function(){
         from: -1
     };
 
+    // filename where output results will be written
+    this.filename_out = '';
+
     this.init();
 };
 
@@ -68,6 +71,15 @@ CsvMerge.prototype.setColumnsCheck = function(columns){
 
 CsvMerge.prototype.setColumnsAppend = function(appendObj){
     this.columns_append = appendObj;    
+};
+
+
+/**
+ * Set the filename of CSV file where output data will be written
+ * @param {String: CSV output filename} filename 
+ */
+CsvMerge.prototype.setOutputFilename = function(filename){
+    this.filename_out = filename;
 };
 
 
@@ -131,23 +143,33 @@ CsvMerge.prototype.readFile = function(fileObject, callback){
  * @param {String data} data 
  */
 CsvMerge.prototype.writeToFile = function(data, filename){
+    var that = this;
+
     if(data.length == 0){
         console.log("Nothing to write.");
         return;
     }
 
+    // Set the column headers
     var headers = [];
     for(var i=0; i<this.columns_check.length; i++)
         headers.push(this.columns_check[i]);
+
+    // Append the optional column headers
+    this.columns_append.headers.forEach(function(value, index){
+        headers.push(value);
+    });
 
     const opts = { headers };
     const parser = new _json2csv(opts);
     const csv = parser.parse(data);
 
     
-    _fs.writeFile((filename !== undefined) ? filename : 'compare.csv', csv, function(err){
+    _fs.writeFile((filename !== undefined) ? filename : this.filename_out, csv, function(err){
         if(err)
             console.log('Error writing to file ' + err);
+        else
+            console.log('Matching results written to ' + that.filename_out); 
     });
 };
 
@@ -202,10 +224,16 @@ CsvMerge.prototype.compare = function(file1, file2, appendObj){
                 this.filtered.push(compare[i]);
                 console.log(' ---> Row ' + i + ' match found! At row ' + j + ', similar-columns: ' + count + '/' + this.columns_check.length + ', matches: [' + similars.length + ']');
 
-                // Append the GPS coordinates
-                if(_root['_lon'] !== undefined){
-                    this.filtered[this.filtered.length-1]['_lon'] = _root['_lon'];
-                    this.filtered[this.filtered.length-1]['_lat'] = _root['_lat'];
+                // Append the optional columns
+                if(this.columns_append.headers.length > 0){
+                    for(var k=0; k<this.columns_append.headers.length; k++){
+                        var optional_key = this.columns_append.headers[k];
+
+                        if(_root[optional_key] !== undefined){
+                            this.filtered[this.filtered.length-1][optional_key] = _root[optional_key];
+                        }
+                    }
+
                 }
                 break;
             }
