@@ -735,6 +735,7 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
             }                
         }
         
+        // Calculate the accumulated weather variables
         this.data_processed[i][numDays + 'w_tmax'] = parseFloat(tmax);
         this.data_processed[i][numDays + 'w_tmmin'] = parseFloat(tmin);
         this.data_processed[i][numDays + 'w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
@@ -848,6 +849,7 @@ Dextraction.prototype.appendWeatherData = function(){
             }        
         }
 
+        // Calculate the accumulated weather variables
         this.data_processed[i]['w_tmax'] = parseFloat(tmax);
         this.data_processed[i]['w_tmmin'] = parseFloat(tmin);
         this.data_processed[i]['w_tavg'] = ((total_tmax/denom) + (total_tmin/denom)) / 2;
