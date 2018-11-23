@@ -131,6 +131,11 @@ CsvMerge.prototype.readFile = function(fileObject, callback){
  * @param {String data} data 
  */
 CsvMerge.prototype.writeToFile = function(data, filename){
+    if(data.length == 0){
+        console.log("Nothing to write.");
+        return;
+    }
+
     var headers = [];
     for(var i=0; i<this.columns_check.length; i++)
         headers.push(this.columns_check[i]);
