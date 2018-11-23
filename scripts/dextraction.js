@@ -41,6 +41,15 @@ var Dextraction = function(){
 
 
 /**
+ * Set the number of days list to read IRRI weather data from
+ * @param {Integer: array of number of days to read back from JS Date to fetch IRRI weather data} numDaysList 
+ */
+Dextraction.prototype.setBacktrackDays = function(numDaysList){
+    this.backtrack_days = numDaysList;
+};
+
+
+/**
  * Get all unique farmer names from the subplot level from the firebase online-loaded data
  * Gets only the first and last name
  * Returns an Object of format:
@@ -859,8 +868,8 @@ Dextraction.prototype.appendWeatherData = function(){
 
     // Get the weather data (N) days from the last day of the week where 
     // P&D's occurence was detected "w_growthstg_date"
-    this.appendWeatherDataBacktrack(30); 
-    this.appendWeatherDataBacktrack(60); 
+    for(var i=0; i<this.backtrack_days.length; i++)
+        this.appendWeatherDataBacktrack(this.backtrack_days[i]); 
 
     // Write processed data to files
     this.writeFiles();
