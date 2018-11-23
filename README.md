@@ -39,12 +39,12 @@ These are node modules that are used in this project.
 1. Clone this repository to your local PC, or download as a `.zip` file.
 2. Go into the project directory from the command line.
 3. Run `npm install`.
-4. Start debugging using VS Code. Open and edit the following source codes and make sure they contain proper input file names and file paths: `index-dextraction.js`, `index-csvcompare.js`. Run `npm` commands from the commandline. 
+4. Start debugging using VS Code. Open and edit the following source codes and make sure they contain proper input file names and file paths: `app-dextraction.js`, `app-csvcompare.js`. Run `npm` commands from the commandline. 
 
    - To run **dextraction**, type the command <br>
-     `node index-dextraction.js`, and `node index-csvcompare.js`
+     `node app-dextraction.js`, and `node index-csvcompare.js`
    - To run **csvcompare**, type the command <br>
-     `node index-csvcompare.js`
+     `node app-csvcompare.js`
 
 
 
