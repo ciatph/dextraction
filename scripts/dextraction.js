@@ -41,6 +41,15 @@ var Dextraction = function(){
 
 
 /**
+ * Set the valid list of years to process from data sets
+ * @param {String: array of years to process from data sets} yearsList 
+ */
+Dextraction.prototype.setYears = function(yearsList){
+    this.years = yearsList;
+};
+
+
+/**
  * Set the number of days list to read IRRI weather data from
  * @param {Integer: array of number of days to read back from JS Date to fetch IRRI weather data} numDaysList 
  */
