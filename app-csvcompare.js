@@ -17,7 +17,8 @@ csvmerge.setFile('./data/CassavaPandPHE-CSV2.csv', csvmerge.TYPE_FILE_COMPARE);
 // Original raw data (generated)
 //csvmerge.setFile('./data/data_csv_OLD_20180725_CSV.csv', csvmerge.TYPE_FILE_COMPARE);
 
-// Set the CSV columns to check. The CSV files should have similar column names
+// Set the CSV columns to check. The CSV files can contain other column names but 
+// should have similar column names listed here, in any order
 csvmerge.setColumnsCheck([
     'fname', 
     'midname', 
