@@ -39,6 +39,7 @@ These are node modules that are used in this project.
 1. Clone this repository to your local PC, or download as a `.zip` file.
 2. Go into the project directory from the command line.
 3. Run `npm install`.
+4. Obtain the input data sets that will be used. Please refer to the `README's` in `/data/weather/` and `data/weather/graphr/` for data formatting and how to obtain them.
 4. Start debugging using VS Code. Open and edit the following source codes and make sure they contain proper input file names and file paths: `app-dextraction.js`, `app-csvcompare.js`. Run `npm` commands from the commandline. 
 
    - To run **dextraction**, type the command <br>
@@ -61,4 +62,4 @@ Web tools for 1) finding IRRI's weather data `cell id` using longitude and latit
 
 @ciatph <br>
 **Date created:** 2018/07/31 <br>
-**Date modified:** 2018/11/20
+**Date modified:** 2018/11/23
