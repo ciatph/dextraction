@@ -202,19 +202,20 @@ CsvMerge.prototype.compare = function(file1, file2, appendObj){
                     var _root = base[j];
                     var _item = compare[i];
 
-                    // Column content
-                    var item = compare[i][key].toLowerCase().replace(/ /g, '');
-                    var root = base[j][key].toLowerCase().replace(/ /g, '');
+                    if(compare[i][key] !== undefined){
+                        // Column content
+                        var item = compare[i][key].toLowerCase().replace(/ /g, '');
+                        var root = base[j][key].toLowerCase().replace(/ /g, '');
 
-                    if(item === root){
-                        console.log(' ' + item  + ' == ' + root);
-                        count++;
-                    }
-                    else{
-                        console.log(' ' + item  + ' != ' + root);
-                        break;
-                    }
-                        
+                        if(item === root){
+                            console.log(' ' + item  + ' == ' + root);
+                            count++;
+                        }
+                        else{
+                            console.log(' ' + item  + ' != ' + root);
+                            break;
+                        }
+                    }                        
                 }
             }
 
