@@ -14,11 +14,12 @@ csvmerge.setFile('./data/demo/masterlist.csv', csvmerge.TYPE_FILE_BASE);
 // Set data set to look for in the TYPE_FILE_BASE
 csvmerge.setFile('./data/demo/newlist.csv', csvmerge.TYPE_FILE_COMPARE);
 
-// Set the CSV file output filename (where matching results will be written)
+// Set the CSV file output filename (where rows from TYPE_FILE_COMPARE 
+// that matches with TYPE_FILE_BASE will be written)
 csvmerge.setOutputFilename('results.csv');
 
-// Set the CSV columns to check. The CSV files can contain other column names but 
-// should have similar column names listed here, in any order
+// Set the CSV columns to check for in TYPE_FILE_BASE and TYPE_FILE_COMPARE.
+// The CSV files can contain other column names but should have similar column names listed here, in any order
 csvmerge.setColumnsCheck([
     //'id',
     'name',
