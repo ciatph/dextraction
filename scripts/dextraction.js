@@ -11,29 +11,32 @@ var Dextraction = function(){
     // farmland plots data with farmer information
     this.data;
 
-    // farmer information only
+    // [JS Object] farmer information only
     this.data_farmerinfo;
 
-    // new gps updates from isu
+    // [JS Object] new gps updates from isu
     this.data_gps;
 
-    // final data to be analyzed with weather data
+    // [JS Object] array of final data to be analyzed with weather data
     this.data_processed = [];
 
-    // IRRI weather data container
+    // [JS Object] IRRI weather data container
     this.ref_weather = {};
 
-    // array of firebase keys for a farmer record
+    // [String] array of firebase keys for a farmer record
     this.record_keys = [];
 
-    // Default average _11growthstg (months after P&D was observed)
+    // [Integer] Default average _11growthstg (months after P&D was observed)
     this.AVG_GROWTH_STG_MAP_VALUE = 7;
 
-    // Container of unique user-encoded pesticide names
+    // [String] Container of unique user-encoded pesticide names
     this.ref_pesticide = [];
 
-    // List of valid years for data collection and weather data 
+    // [String] List of valid years for data collection and weather data 
     this.years = ['2014', '2015', '2016'];
+
+    // [Integer] List of number of days as interval to backtrack for fetching IRRI weather data
+    this.backtrack_days = [];
 };
 
 
@@ -952,7 +955,7 @@ Dextraction.prototype.writeFiles = function(){
     
     fs.writeFile('./data/data_json.json', JSON.stringify(this.data_processed), function(err){
         if(err){
-            console.log('error in writing data');
+            console.log('error in writing data');``
         }
         else{
             console.log('JSON data was saved!');
