@@ -5,6 +5,16 @@ An automated data processing tool for extracting and cleaning collected cassava 
 
 **csvcompare.js** compares the contents of (2) CSV files under the same column headers (which can be of any order) are identical, and writes to an output csv file the matching rows plus optional columns from the base csv file.
 
+## Official Releases
+
+The listed sources [here](https://github.com/ciatph/dextraction/releases) are released versions according to data format necessity. Please read each version's overview to get which source you will need.
+
+- [version 3.0.0](https://github.com/ciatph/dextraction/releases/tag/v.3.0.0)
+
+- [version 2.0.0](https://github.com/ciatph/dextraction/releases/tag/v.2.0.0)
+
+- [version 1.0.0](https://github.com/ciatph/dextraction/releases/tag/v.1.0.0)
+
 ### Version Updates
 
 **Version 4.0.0** was built from `version_1.0.0`. It was originally used for the 1st batch of cassava data extraction last July 2018, with a few modifications on the output columns. (Original) Output data sets for this version is available at [link](https://trello.com/c/9jHUFKpV). _(private trello board)_
