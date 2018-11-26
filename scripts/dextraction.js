@@ -576,6 +576,13 @@ Dextraction.prototype.mergeCleanData = function(){
                             record[id]['_09pdist_prow_col'] = utils.convertToCentimeter(value_unit_col.unit, value_unit_col.value);
                             record[id]['_09pdist_prow_row'] = utils.convertToCentimeter(value_unit_row.unit, value_unit_row.value);
                         }
+
+                        // 14. Remove the first "-" character from _did, _userid, _fid
+                        var _keys = ['_did', '_fid', '_userid'];
+                        _keys.forEach(function(value, index){
+                            if(record[id][value].charAt(0) === '-')
+                                record[id][value] = record[id][value].slice(1);
+                        });
                     }
 
                     // Encode the keys
@@ -731,7 +738,7 @@ Dextraction.prototype.appendWeatherDataBacktrack = function(numDays){
                 }  
             }    
             else{
-                console.log('WARNING cellid ' + cell + ' is undefined!');
+                console.log('WARNING cellid ' + cell + ' is undefined! from row ' + this.data_processed[i]['_fid']);
             }                
         }
         
