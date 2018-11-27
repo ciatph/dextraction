@@ -72,4 +72,4 @@ Web tools for 1) finding IRRI's weather data `cell id` using longitude and latit
 
 @ciatph <br>
 **Date created:** 2018/07/31 <br>
-**Date modified:** 2018/11/23
+**Date modified:** 2018/11/27
