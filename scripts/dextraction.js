@@ -29,6 +29,9 @@ var Dextraction = function(){
     // [Integer] Default average _11growthstg (months after P&D was observed)
     this.AVG_GROWTH_STG_MAP_VALUE = 7;
 
+    // Number of kilogramns in (1) cavan
+    this.CONV_KG_CAVANS = 50;
+
     // [String] Container of unique user-encoded pesticide names
     this.ref_pesticide = [];
 
@@ -583,6 +586,45 @@ Dextraction.prototype.mergeCleanData = function(){
                             if(record[id][value].charAt(0) === '-')
                                 record[id][value] = record[id][value].slice(1);
                         });
+
+                        // 15. Remove strings from _03yieldhect. 
+                        if(record[id]['_03yieldhect'] !== ''){
+                            var yield = record[id]['_03yieldhect'].toLowerCase();
+
+                            // Check if there is 'kg' unit
+                            var haskg = yield.match(/kg/g) !== null ? true : false;
+                            var value = 0;
+
+                            // Get the 40% if fresh
+                            if(yield.includes('fresh') && !yield.includes('dry')){
+                                //var fresh = utils.getNumberFromPrefix(record[id]['_03yieldhect'], 'fresh');
+                                var fresh = record[id]['_03yieldhect'].replace(/\D/g, '');
+                                value = (fresh !== '') ? fresh - (fresh * 0.4) : fresh;
+                                console.log('fresh-value: ' + value);
+                            }
+                            else if(yield.includes('fresh') && yield.includes('dry')){
+                                // Get the number for dry, its the first priority if fresh is present
+                                value = utils.getNumberFromPrefix(record[id]['_03yieldhect'], 'dry');
+                            }
+                            else if(!yield.includes('fresh') && yield.includes('dry')){
+                                // Get the number for dry if there is dry
+                                // record[id]['_03yieldhect_clean'] = record[id]['_03yieldhect'].replace(/\D/g, ''); 
+                                value = utils.getNumberFromPrefix(record[id]['_03yieldhect'], 'dry');
+                            }
+                            else{
+                                // Get the 1st occurrence of a number 
+                                var match = yield.match(/[0-9]/);
+                                var index = -1;
+
+                                if(match !== null){
+                                    var fresh = utils.getNumberFromIndex(record[id]['_03yieldhect'], match.index);
+                                    value= (fresh == '') ? 0 : fresh;
+                                }
+                            }
+
+                            // Convert final value to kilograms, if specified
+                            record[id]['_03yieldhect_clean'] = (haskg) ? value / this.CONV_KG_CAVANS : value;
+                        }
                     }
 
                     // Encode the keys
