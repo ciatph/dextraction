@@ -390,5 +390,58 @@ Utils.prototype.getUnitValue = function(data){
 };
 
 
+/**
+ * 
+ * @param {Masterlist string to search for a number} string
+ * @param {Target string to start searching for a number} target 
+ * @param {The number to look for is before the target} isPrefix 
+ */
+Utils.prototype.getNumberFromPrefix = function(string, target, isPrefix){
+    var str = string.replace(/ /g, '').toLowerCase();
+    var index = str.indexOf(target);
+    var tempFind = '';
+
+    if(index > -1){
+        for(i=index; i--; /^\d+$/.test(str[i])){
+            if(str[i].match(/[0-9]/g) !== null){
+                tempFind += str[i];
+            }
+            else{
+                if(tempFind.length > 0)
+                    break;
+            }
+        }
+
+        
+    }
+
+    return (tempFind == '') ? tempFind : 
+        tempFind.split('').reverse().join('');
+};
+
+
+/**
+ * Return the first number substring starting from an index 
+ * @param {Masterlist string to search for a number} string
+ * @param {Target index from @string to start searching for a number} index 
+ */
+Utils.prototype.getNumberFromIndex = function(string, index){
+    var print = true;
+    var number = '';
+
+    string.split('').forEach(function(value, index){ 
+      if(/^\d+$/.test(value) && print){
+          number += value;
+        console.log(value); 
+      }
+      else{
+        print = false;
+      }
+    });
+
+    return (number === '') ? number : 
+        parseInt(number);
+};
+
 
 module.exports = new Utils();
