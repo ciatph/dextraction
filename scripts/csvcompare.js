@@ -68,7 +68,15 @@ CsvMerge.prototype.setColumnsCheck = function(columns){
 };
 
 
-
+/**
+ * Set the list of optional columns to append to output file
+ * @param {A JS object containing data about optional columns to append to output file} appendObj 
+ * - follows the format:
+ *   {
+ *     headers: [],
+ *     from: this.TYPE_FILEBASE | this.TYPE_FILE_COMPARE
+ *   }
+ */
 CsvMerge.prototype.setColumnsAppend = function(appendObj){
     this.columns_append = appendObj;    
 };
