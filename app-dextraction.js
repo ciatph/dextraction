@@ -24,7 +24,7 @@ var dextraction = require('./scripts/dextraction.js');
 dextraction.setBacktrackDays(['2014', '2015', '2016']);
 
 // Set the list of number of days to fetch IRRI weather data
-dextraction.setBacktrackDays([30, 60]);
+dextraction.setBacktrackDays([15, 30, 45, 60]);
 
 
 // Load, process and export the processed data sets.
